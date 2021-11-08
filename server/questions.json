@@ -1,0 +1,9 @@
+[
+  {"question": "¿Quién gano la libertadores 2018?",
+  "possible_answers":  ["Real Madrid", "Barcelona", "Boca", "River"],
+  "answer":"River"},
+
+  {"question": "¿Cómo se dice 'cocinero' en inglés?",
+  "possible_answers":   ["Cooker","Cook","Cooking","Cooked"],
+  "answer":"Cooker"}
+]
