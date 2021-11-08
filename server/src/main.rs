@@ -8,8 +8,8 @@ use std::str;
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:3001").unwrap();
     println!("Listening on port 3001");
-
-
+    let questions: Vec<question::Question> = file_reader::reader();
+    println!("{}", questions[0].question);
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
         let mut buffer = [0; 1024];
