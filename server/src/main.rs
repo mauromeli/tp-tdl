@@ -20,4 +20,5 @@ fn main() {
         //stream.write(owned_string.to_uppercase().as_bytes()).unwrap();
         stream.write(owned_string.as_bytes()).unwrap();
     }
+    drop(listener)
 }
