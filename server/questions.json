@@ -4,6 +4,6 @@
   "answer":"River"},
 
   {"question": "¿Cómo se dice 'cocinero' en inglés?",
-  "possible_answers":   ["Cooker","Cook","Cooking","Cooked"],
+  "possible_answers":   ["Cooker", "Cook", "Cooking", "Cooked"],
   "answer":"Cooker"}
 ]

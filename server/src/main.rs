@@ -2,22 +2,27 @@ mod file_reader;
 mod question;
 mod client;
 
-use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::str;
 use crate::client::{Client, Runnable};
 
+const HOST: &str = "localhost";
+const PORT: &str = "3000";
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:3001").unwrap();
-    println!("Listening on port 3001");
+    let addr = &format!("{}:{}", HOST, PORT);
+    let listener = TcpListener::bind(addr).unwrap();
+    println!("Listening on port {}", PORT);
+
     let questions: Vec<question::Question> = file_reader::reader(); //we should create game's class
-    println!("{}", questions[0].question);
 
     for client_stream in listener.incoming() {
         //Now we can have an array of clients
         let mut client = Client::new(client_stream.unwrap());
-        Client::run(&mut client, questions.clone());
+        Client::send(&mut client, &questions[0].question);
+        let recv_string = Client::recv(&mut client);
+        println!("Selected option: {}", recv_string);
     }
+
     drop(listener)
 }
