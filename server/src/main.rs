@@ -7,9 +7,9 @@ use std::str;
 use crate::server::Server;
 
 const HOST: &str = "localhost";
-const PORT: &str = "3000";
+const PORT: &str = "3005";
 
 fn main() {
-    let mut server = Server::new();
+    let server = Server::new();
     server.run(HOST, PORT);
 }

@@ -18,22 +18,23 @@ impl Server {
         Server {}
     }
 
-    pub fn run(mut self, host: &str, port: &str) {
+    pub fn run(self, host: &str, port: &str) {
         let addr = &format!("{}:{}", host, port);
         let listener = TcpListener::bind(addr).unwrap();
         println!("Listening on port {}", port);
 
         let questions: Vec<question::Question> = file_reader::reader(); //we should create game's class
 
-        let (chSender, chRecv): (ChannelSender, ChannelRecv) = mpsc::channel();
-        self.evaluator_thread(chRecv);
+        let (ch_sender, ch_recv): (ChannelSender, ChannelRecv) = mpsc::channel();
+        self.evaluator_thread(ch_recv);
 
         while let Ok(connection) = listener.accept() {
             //Now we can have an array of clients
-            let (client_stream, _) = connection;
-            let channel = chSender.clone();
+            let (client_stream, addr) = connection;
+            println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
 
             //we should create some shared structure, maybe could be a mutex or a channels solution
+            let channel = ch_sender.clone();
             let question_cloned = questions.clone();
             let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
                 Server::client_handler(client_stream, question_cloned, channel)?;
@@ -49,10 +50,10 @@ impl Server {
         client.send(&questions[0].question);
         let recv_string = client.recv();
         println!("Selected option: {}", recv_string);
-        let (chSender, chRecv): (Sender<String>, Receiver<String>) = mpsc::channel();
-        sender.send((recv_string, chSender)).unwrap();
+        let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();
+        sender.send((recv_string, ch_sender)).unwrap();
 
-        let response = chRecv.recv().unwrap();
+        let response = ch_recv.recv().unwrap();
         client.send(&response);
         Ok(())
     }
@@ -63,10 +64,10 @@ impl Server {
             while let Ok((opcion, sender)) = receiver.recv() {
                 match opcion.as_str() {
                     "a" => {
-                        sender.send("Correcto".to_string())
+                        sender.send("Correcto".to_string()).unwrap();
                     }
                     _ => {
-                        sender.send("incorrecto".to_string())
+                        sender.send("incorrecto".to_string()).unwrap();
                     }
                 }
             }
