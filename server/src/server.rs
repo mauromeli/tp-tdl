@@ -1,12 +1,13 @@
 use std::net::{TcpListener, TcpStream};
 use std::io;
+use std::io::Read;
 use std::thread;
 use std::thread::JoinHandle;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
-use crate::{file_reader, question};
 use crate::client::Client;
 
+const EXIT_KEY: char = 'q';
 
 type ChannelSender = Sender<(String, Sender<String>)>;
 type ChannelRecv = Receiver<(String, Sender<String>)>;
@@ -19,37 +20,58 @@ impl Server {
     }
 
     pub fn run(self, host: &str, port: &str) {
-        let addr = &format!("{}:{}", host, port);
-        let listener = TcpListener::bind(addr).unwrap();
-        println!("Listening on port {}", port);
+        self.spawn_listener_thread(host, port);
 
-        let questions: Vec<question::Question> = file_reader::reader(); //we should create game's class
-
-        let (ch_sender, ch_recv): (ChannelSender, ChannelRecv) = mpsc::channel();
-        self.evaluator_thread(ch_recv);
-
-        while let Ok(connection) = listener.accept() {
-            //Now we can have an array of clients
-            let (client_stream, addr) = connection;
-            println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
-
-            //we should create some shared structure, maybe could be a mutex or a channels solution
-            let channel = ch_sender.clone();
-            let question_cloned = questions.clone();
-            let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-                Server::client_handler(client_stream, question_cloned, channel)?;
-                Ok(())
-            });
+        for byte in io::stdin().bytes() {
+            let c = byte.unwrap() as char;
+            if c == EXIT_KEY {
+                break;
+            }
         }
-
-        drop(listener)
     }
 
-    fn client_handler(client: TcpStream, questions: Vec<question::Question>, sender: ChannelSender) -> io::Result<()> {
+    fn spawn_listener_thread(self, host: &str, port: &str) {
+        let host_copy = host.to_string();
+        let port_copy = port.to_string();
+
+        let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
+            let addr = &format!("{}:{}", host_copy, port_copy);
+            let listener = TcpListener::bind(addr).unwrap();
+            println!("[INFO] - Listening on port {}", port_copy);
+
+            // FIXME: This should not be here
+            // let questions: Vec<question::Question> = file_reader::reader(); //we should create game's class
+
+            let (in_sender, in_recv): (ChannelSender, ChannelRecv) = mpsc::channel();
+            self.spawn_evaluator_thread(in_recv);
+
+            while let Ok(connection) = listener.accept() {
+                // Now we can have an array of clients
+                let (client_stream, addr) = connection;
+                println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
+
+                // We should create some shared structure, maybe could be a mutex or a channels solution
+                let channel = in_sender.clone();
+                // let question_cloned = questions.clone();
+                let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
+                    Server::client_handler(client_stream, channel)?;
+                    Ok(())
+                });
+            }
+
+            drop(listener);
+            Ok(())
+        });
+    }
+
+    fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
         let mut client = Client::new(client);
-        client.send(&questions[0].question);
+
+        client.send(&"Mensaje".to_string());
+
         let recv_string = client.recv();
         println!("Selected option: {}", recv_string);
+
         let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();
         sender.send((recv_string, ch_sender)).unwrap();
 
@@ -59,7 +81,7 @@ impl Server {
     }
 
     // Probably we can configure this with the answers
-    fn evaluator_thread(self, receiver: ChannelRecv) {
+    fn spawn_evaluator_thread(self, receiver: ChannelRecv) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             while let Ok((opcion, sender)) = receiver.recv() {
                 match opcion.as_str() {
@@ -67,7 +89,7 @@ impl Server {
                         sender.send("Correcto".to_string()).unwrap();
                     }
                     _ => {
-                        sender.send("incorrecto".to_string()).unwrap();
+                        sender.send("Incorrecto".to_string()).unwrap();
                     }
                 }
             }
