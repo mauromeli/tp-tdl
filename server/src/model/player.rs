@@ -3,7 +3,8 @@ use std::cell::Cell;
 thread_local!(static NEXT_ID: Cell<u8> = Cell::new(1));
 
 pub struct Player {
-    pub id: u8
+    pub id: u8,
+    pub points: u32
 }
 
 impl Player {
@@ -11,8 +12,12 @@ impl Player {
         NEXT_ID.with(|next_id| {
             let id = next_id.get();
             next_id.set(id + 1);
-            Player { id }
+            Player { id, points: 0 }
         })
+    }
+
+    pub fn add_points(&mut self, points: u32) {
+        self.points += points;
     }
 }
 

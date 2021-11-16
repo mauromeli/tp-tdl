@@ -6,6 +6,19 @@ pub struct Question {
     pub answer: String
 }
 
+impl Question {
+    const POINTS_IF_CORRECT : u32 = 5;
+    const POINTS_IF_INCORRECT : u32 = 0;
+
+    pub fn get_points_for(&self, option: String) -> u32 {
+        if self.answer == option {
+            Question::POINTS_IF_CORRECT
+        } else {
+            Question::POINTS_IF_INCORRECT
+        }
+    }
+}
+
 impl Clone for Question{
     fn clone(&self) -> Self {
         return Question{
