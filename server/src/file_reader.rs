@@ -1,4 +1,4 @@
-use crate::question::Question;
+use crate::model::question::Question;
 use std::fs;
 use serde_json;
 

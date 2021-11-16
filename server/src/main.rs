@@ -1,7 +1,7 @@
 mod file_reader;
-mod question;
 mod client;
 mod server;
+mod model;
 
 use std::str;
 use crate::server::Server;

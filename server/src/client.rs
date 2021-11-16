@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::str;
-use crate::question::Question;
+use crate::model::question::Question;
 
 pub struct Client{
     stream: TcpStream
