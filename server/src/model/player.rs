@@ -6,7 +6,14 @@ pub struct Player {
     pub id: u8,
     pub points: u32
 }
-
+impl Clone for Player{
+    fn clone(&self) -> Self {
+        return Player{
+            id: self.id.clone(),
+            points: self.points.clone()
+        }
+    }
+}
 impl Player {
     pub fn new() -> Player {
         NEXT_ID.with(|next_id| {
