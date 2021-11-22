@@ -6,13 +6,16 @@ use std::thread::JoinHandle;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
 use crate::client::Client;
+use std::time::Duration;
 
 const EXIT_KEY: char = 'q';
 
 type ChannelSender = Sender<(String, Sender<String>)>;
 type ChannelRecv = Receiver<(String, Sender<String>)>;
 
-pub struct Server {}
+pub struct Server {
+    // client_senders array;
+}
 
 impl Server {
     pub fn new() -> Server {
@@ -66,17 +69,29 @@ impl Server {
 
     fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
         let mut client = Client::new(client);
-
-        client.send(&"Mensaje".to_string());
-
         let recv_string = client.recv();
-        println!("Selected option: {}", recv_string);
 
-        let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();
-        sender.send((recv_string, ch_sender)).unwrap();
+        match recv_string.as_str() {
+            "connect" => client.send(&"ackconnect".to_owned()),
+            _ => {
+                println!("couldn't connect");
+            }
+        }
 
-        let response = ch_recv.recv().unwrap();
-        client.send(&response);
+        loop {
+            client.send(&"Mensaje".to_string());
+
+            let recv_string = client.recv();
+            // decodificar paquete
+            println!("Selected option: {}", recv_string);
+
+            let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();
+            sender.send((recv_string, ch_sender)).unwrap();
+
+            let response = ch_recv.recv().unwrap();
+            client.send(&response);
+            thread::sleep(Duration::from_millis(2000));
+        }
         Ok(())
     }
 
