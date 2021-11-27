@@ -1,5 +1,6 @@
 mod client;
 mod packages;
+mod decode_packages;
 
 use crate::client::Client;
 
