@@ -6,6 +6,7 @@ use std::thread::JoinHandle;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
 use crate::client::Client;
+use crate::packages::Package;
 use crate::model::kahoot::Kahoot;
 use crate::packet;
 
@@ -73,69 +74,64 @@ impl Server {
     fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
         let mut client = Client::new(client);
 
-        client.send(&"Mensaje".to_string());
+        while let package = client.recv() {
+            match package {
+                Package::Connect { player_name } => client.send(&"A1".to_string()),
+                Package::StartGame { player_id } => {
+                    println!("start game");
+                    client.send(&"P¿Cuantos años...?|10 años-200 años-400 años".to_string())
+                },
+                Package::Response { player_id, response } => {
+                    println!("respuesta: {}, player_id: {}", response, player_id);
+                    client.send(&"correcto - siguiente pregunta".to_string());
+                },
+                Package::FinishGame { player_id } => {
+                    client.send(&"Partida terminada".to_string());
+                }
+            }
+        }
 
-        let recv_string = client.recv();
-        println!("Selected option: {}", recv_string);
 
+
+        //println!("Selected option: {}", recv_string);
+        /*
         let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();
         sender.send((recv_string, ch_sender)).unwrap();
 
         let response = ch_recv.recv().unwrap();
         client.send(&response);
+        */
         Ok(())
     }
-
-    /*
-    command_generator() -> Result(Paquete, Err)
-
-	array = C,Mauro
-	match array[0] {
-		c => connect_generator(array),
-		S =>
-	}
-
-	connect_generator(array) -> Paquetes {}
-
-
-	enum Paquetes {
-		CONNECT(String: name),
-		ACKCONNECT(Sring: id_player),
-	}
-
-	paquete = command_generator()
-
-	match(paquete) {
-		CONNECT(name) => connectarse_al_juego(name),
-		RESPUESTA()
-	}
-    */
-
 
     // Probably we can configure this with the answers
     fn spawn_evaluator_thread(mut self, receiver: ChannelRecv) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-            while let Ok((option, sender)) = receiver.recv() {
-                let mut packet;
-                match option.chars().nth(0).unwrap() {
-                   'C' => {
-                        packet = packet::connect_generator(option);
-                    }
-                   'R' => {
-                        packet = packet::answer_generator(option);
-                    }
-                   'S' => {
-                        packet = packet::score_generator(option);
+            while let Ok((opcion, sender)) = receiver.recv() {
+                match opcion.as_str() {
+                    "a" => {
+                        sender.send("Correcto".to_string()).unwrap();
                     }
                     _ => {
-                        packet = packet::error_generator(option);
+                        sender.send("Incorrecto".to_string()).unwrap();
                     }
                 }
-                let packet_to_send = packet::command_generator(packet,
-                                                               &mut self.kahoot_game);
-                sender.send(packet_to_send).unwrap();
+                //let packet_to_send = packet::command_generator(packet,
+                  //                                             &mut self.kahoot_game);
+                //sender.send(packet_to_send).unwrap();
             }
             Ok(())
         });
+    }
+
+    fn connect_client(client: TcpStream, sender: ChannelSender) -> Client {
+        let mut client = Client::new(client);
+
+        client.send(&"Ingrese su nombre de usuario".to_string());
+
+        let recv_string = client.recv();
+        println!("Nombre de usuario: {:?}", recv_string);
+
+        return client;
     }
 }

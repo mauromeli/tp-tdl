@@ -2,6 +2,7 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::str;
 use crate::model::question::Question;
+use crate::packages::Package;
 
 pub struct Client{
     stream: TcpStream
@@ -18,10 +19,11 @@ impl Client {
         }
     }
 
-    pub fn recv(&mut self) -> String {
+    pub fn recv(&mut self) -> Package {
         let mut buffer = [0; 1024];
         let bytes_read = self.stream.read(&mut buffer).unwrap();
-        str::from_utf8(&buffer[0..bytes_read]).unwrap().to_string()
+        //let recv_string = str::from_utf8(&buffer[0..bytes_read]).unwrap().to_string();
+        decode_package(&buffer).unwrap()
     }
 
     pub fn send(&mut self, str: &String) {
@@ -38,5 +40,24 @@ impl Runnable for Client{
         //owned_string.push_str(buffer_as_string);
         //stream.write(owned_string.to_uppercase().as_bytes()).unwrap();
         client.stream.write(owned_string.as_bytes()).unwrap();
+    }
+}
+
+fn decode_package(bytes: &[u8]) -> Result<Package, String> {
+    match bytes[0] as char {
+        'C' => {
+            let player_name = str::from_utf8(&bytes[1..]).unwrap().to_string();
+            Ok(Package::Connect{ player_name })
+        },
+        'S' => {
+            let player_id = str::from_utf8(&bytes[1..]).unwrap().to_string();
+            Ok(Package::StartGame{ player_id })
+        },
+        'R' => {
+            let player_id = str::from_utf8(&bytes[1..2]).unwrap().to_string();
+            let response = str::from_utf8(&bytes[2..]).unwrap().to_string();
+            Ok(Package::Response{ player_id, response })
+        }
+        _ => { Err("Error parseando el paquete enviado".to_string()) }
     }
 }
