@@ -6,5 +6,8 @@ pub enum Package {
     Question {
         question: String,
         options: Vec<String>,
+    },
+    FinishGame {
+        player_id: String,
     }
 }

@@ -68,17 +68,20 @@ impl Client {
                 println!("Opcion C: {}", options[2]);
             }
 
-            //println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
-
             let mut buffer = String::new();
             io::stdin().read_line(&mut buffer).unwrap();
             buffer.pop(); // Remove newline
+
             let bytes = [
                     "R".to_string().as_bytes(),
                     "1".as_bytes(),
                     buffer.as_bytes(),
                 ].concat();
             stream.write(&bytes);
+
+            //println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
+
+
             //stream.write(buffer.as_bytes()).unwrap();
 
             //bytes_received = stream.read(&mut recv_buffer).unwrap();

@@ -78,7 +78,9 @@ impl Server {
                 Package::Response { player_id, response } => {
                     println!("respuesta: {}, player_id: {}", response, player_id);
                     client.send(&"correcto - siguiente pregunta".to_string());
-                    //client.send(&"pregunta".to_string())
+                },
+                Package::FinishGame { player_id } => {
+                    client.send(&"Partida terminada".to_string());
                 }
             }
         }
