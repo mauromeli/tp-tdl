@@ -8,7 +8,6 @@ use std::sync::mpsc;
 use crate::client::Client;
 use crate::packages::Package;
 use crate::model::kahoot::Kahoot;
-use crate::packet;
 
 const EXIT_KEY: char = 'q';
 

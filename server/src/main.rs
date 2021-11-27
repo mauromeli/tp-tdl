@@ -3,7 +3,6 @@ mod client;
 mod server;
 mod model;
 mod packages;
-pub mod packet;
 
 use std::str;
 use crate::server::Server;
