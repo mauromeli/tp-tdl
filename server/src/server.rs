@@ -73,7 +73,7 @@ impl Server {
             Package::Connect { player_name } => client.send(&"ackconnect".to_string()),
         }
 
-
+        client.send(&"Pregunta".to_string());
         //println!("Selected option: {}", recv_string);
         /*
         let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();

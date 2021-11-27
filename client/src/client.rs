@@ -39,7 +39,7 @@ impl Client {
         let mut response = from_utf8(&mut recv_buffer[0..bytes_received]).unwrap();
 
 
-        match response{
+        match response {
             "ackconnect" => println!("Esperando Preguntas.... \n"),
             _ => {
                 println!("couldn't connect");
