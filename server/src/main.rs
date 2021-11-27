@@ -2,6 +2,7 @@ mod file_reader;
 mod client;
 mod server;
 mod model;
+pub mod packet;
 
 use std::str;
 use crate::server::Server;
