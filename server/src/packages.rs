@@ -10,6 +10,10 @@ pub enum Package {
         player_id: String,
         response: String,
     }/*,
+    Question {
+        question: String,
+        options: Vec<String>,
+    },
     ACKConnect {
         player_id: String,
     },

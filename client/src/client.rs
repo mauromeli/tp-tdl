@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::str::from_utf8;
 use std::io::stdin;
+use crate::packages::Package;
 
 pub struct Client {}
 
@@ -36,15 +37,16 @@ impl Client {
 
         let mut recv_buffer = [0; 1024];
         let bytes_received = stream.read(&mut recv_buffer).unwrap();
-        let mut response = from_utf8(&mut recv_buffer[0..bytes_received]).unwrap();
+        //let response = from_utf8(&mut recv_buffer[0..bytes_received]).unwrap();
 
+        let ack_package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
 
-        match response {
-            "ackconnect" => {
+        match ack_package {
+            Package::ACKConnect { player_id } => {
                 println!("Esperando Preguntas.... \n");
                 let bytes = [
                         "S".to_string().as_bytes(),
-                        "1".as_bytes(),
+                        player_id.as_bytes(),
                     ].concat();
                 stream.write(&bytes);
             },
@@ -57,7 +59,16 @@ impl Client {
         let mut recv_buffer = [0; 1024];
         while let Ok(bytes_received) = stream.read(&mut recv_buffer) {
             //let mut bytes_received = stream.read(&mut recv_buffer).unwrap();
-            println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
+            let package = decode_package(&mut recv_buffer[0..bytes_received]);
+
+            if let Ok(Package::Question{ question, options }) = package {
+                println!("Pregunta: {}", question);
+                println!("Opcion A: {}", options[0]);
+                println!("Opcion B: {}", options[1]);
+                println!("Opcion C: {}", options[2]);
+            }
+
+            //println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
 
             let mut buffer = String::new();
             io::stdin().read_line(&mut buffer).unwrap();
@@ -95,5 +106,43 @@ impl Client {
 
     fn name_generator(&self) -> String {
         "BOT".to_string()
+    }
+}
+
+fn decode_package(bytes: &[u8]) -> Result<Package, String> {
+    match bytes[0] as char {
+        'A' => {
+            let player_id = std::str::from_utf8(&bytes[1..]).unwrap().to_string();
+            Ok(Package::ACKConnect { player_id })
+        },
+        'P' => {
+            let mut string = std::str::from_utf8(&bytes[1..]).unwrap().to_string();
+            let mut pos = 1;
+            let mut question = "".to_string();
+            if let Some(index) = string.find("|") {
+                if let Ok(string) = std::str::from_utf8(&(bytes[pos..index + pos]).to_vec()) {
+                    question = string.to_string();
+                }
+                pos = index + pos + 1;
+            }
+            let mut options = Vec::new();
+            for _i in 0..2 {
+                string = std::str::from_utf8(&bytes[pos..]).unwrap().to_string();
+                if let Some(index) = string.find("-") {
+                    if let Ok(string) = std::str::from_utf8(&(bytes[pos..index + pos]).to_vec()) {
+                        options.push(string.to_string());
+                    }
+                    pos = index+pos+1;
+                }
+            }
+            string = std::str::from_utf8(&bytes[pos..]).unwrap().to_string();
+            options.push(string.to_string());
+            Ok(Package::Question{ question, options })
+        },
+        _ => {
+            let string = std::str::from_utf8(&bytes).unwrap().to_string();
+            println!("{}", string);
+            Err("Error parseando el paquete enviado".to_string())
+        }
     }
 }

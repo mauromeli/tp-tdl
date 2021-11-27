@@ -2,7 +2,6 @@ mod client;
 mod packages;
 
 use crate::client::Client;
-use crate::packages::Package;
 
 const HOST: &str = "localhost";
 const PORT: &str = "3004";

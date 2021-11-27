@@ -70,14 +70,14 @@ impl Server {
 
         while let package = client.recv() {
             match package {
-                Package::Connect { player_name } => client.send(&"ackconnect".to_string()),
+                Package::Connect { player_name } => client.send(&"A1".to_string()),
                 Package::StartGame { player_id } => {
                     println!("start game");
-                    client.send(&"pregunta".to_string())
+                    client.send(&"P¿Cuantos años...?|10 años-200 años-400 años".to_string())
                 },
                 Package::Response { player_id, response } => {
                     println!("respuesta: {}, player_id: {}", response, player_id);
-                    client.send(&"correcto - pregunta".to_string());
+                    client.send(&"correcto - siguiente pregunta".to_string());
                     //client.send(&"pregunta".to_string())
                 }
             }
