@@ -22,7 +22,7 @@ impl Client {
     pub fn recv(&mut self) -> Package {
         let mut buffer = [0; 1024];
         let bytes_read = self.stream.read(&mut buffer).unwrap();
-        //let recv_string = str::from_utf8(&buffer[0..bytes_read]).unwrap().to_string();
+        //let recv_string = str::from_utfuse crate::client::Client;8(&buffer[0..bytes_read]).unwrap().to_string();
         decode_package(&buffer).unwrap()
     }
 
@@ -57,6 +57,10 @@ fn decode_package(bytes: &[u8]) -> Result<Package, String> {
             let player_id = str::from_utf8(&bytes[1..2]).unwrap().to_string();
             let response = str::from_utf8(&bytes[2..]).unwrap().to_string();
             Ok(Package::Response{ player_id, response })
+        },
+        'H' => { //Check status, si se saca el StartGame le cambiamos la letra a S
+            let player_id = std::str::from_utf8(&bytes[1..]).unwrap().to_string();
+            Ok(Package::CheckStatus{ player_id })
         }
         _ => { Err("Error parseando el paquete enviado".to_string()) }
     }

@@ -78,14 +78,15 @@ impl Server {
                 Package::Connect { player_name } => client.send(&"A1".to_string()),
                 Package::StartGame { player_id } => {
                     println!("start game");
-                    client.send(&"P¿Cuantos años...?|10 años-200 años-400 años".to_string())
+                    client.send(&"P¿Cuantos años...?|10 años-200 años-400 años-20 años".to_string())
                 },
                 Package::Response { player_id, response } => {
                     println!("respuesta: {}, player_id: {}", response, player_id);
+                    //client.send(&"Ejugador1,43,jugador2,40,jugador3,30,jugador4,33".to_string());
                     client.send(&"correcto - siguiente pregunta".to_string());
                 },
-                Package::FinishGame { player_id } => {
-                    client.send(&"Partida terminada".to_string());
+                Package::CheckStatus { player_id } => {
+                    println!("check status, player_id {}", player_id);
                 }
             }
         }

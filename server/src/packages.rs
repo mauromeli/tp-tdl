@@ -10,7 +10,7 @@ pub enum Package {
         player_id: String,
         response: String,
     },
-    FinishGame {
+    CheckStatus {
         player_id: String,
     }
 }

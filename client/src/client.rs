@@ -1,7 +1,6 @@
 use std::io;
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::str::from_utf8;
 use std::io::stdin;
 use crate::packages::Package;
 use crate::decode_packages::decode_package;
@@ -67,16 +66,33 @@ impl Client {
                 println!("Opcion A: {}", options[0]);
                 println!("Opcion B: {}", options[1]);
                 println!("Opcion C: {}", options[2]);
-            }
+                println!("Opcion D: {}", options[3]);
+
+            } else if let Ok(Package::EndGame { player_1_name, score_1,
+                player_2_name, score_2, player_3_name, score_3,
+                player_4_name, score_4}) = package {
+                    println!("Puntajes:");
+                    println!("{}: {} puntos", player_1_name, score_1);
+                    println!("{}: {} puntos", player_2_name, score_2);
+                    println!("{}: {} puntos", player_3_name, score_3);
+                    println!("{}: {} puntos", player_4_name, score_4);
+                    break;
+                }
 
             let mut buffer = String::new();
             io::stdin().read_line(&mut buffer).unwrap();
             buffer.pop(); // Remove newline
-
+            
             let bytes = [
                     "R".to_string().as_bytes(),
                     "1".as_bytes(),
                     buffer.as_bytes(),
+                ].concat();
+            stream.write(&bytes);
+
+            let bytes = [
+                    "H".to_string().as_bytes(), //Check Status
+                    "1".as_bytes(),
                 ].concat();
             stream.write(&bytes);
 
