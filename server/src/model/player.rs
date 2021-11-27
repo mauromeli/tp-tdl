@@ -4,22 +4,24 @@ thread_local!(static NEXT_ID: Cell<u8> = Cell::new(1));
 
 pub struct Player {
     pub id: u8,
-    pub points: u32
+    pub points: u32,
+    pub name: String
 }
 impl Clone for Player{
     fn clone(&self) -> Self {
         return Player{
             id: self.id.clone(),
+            name: self.name.clone(),
             points: self.points.clone()
         }
     }
 }
 impl Player {
-    pub fn new() -> Player {
+    pub fn new(name: String) -> Player {
         NEXT_ID.with(|next_id| {
             let id = next_id.get();
             next_id.set(id + 1);
-            Player { id, points: 0 }
+            Player { id, name, points: 0 }
         })
     }
 

@@ -7,17 +7,23 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
 use crate::client::Client;
 use crate::packages::Package;
+use crate::model::kahoot::Kahoot;
+use crate::packet;
 
 const EXIT_KEY: char = 'q';
 
 type ChannelSender = Sender<(String, Sender<String>)>;
 type ChannelRecv = Receiver<(String, Sender<String>)>;
 
-pub struct Server {}
+pub struct Server {
+    pub kahoot_game: Kahoot
+}
 
 impl Server {
     pub fn new() -> Server {
-        Server {}
+        Server {
+            kahoot_game: Kahoot::new()
+        }
     }
 
     pub fn run(self, host: &str, port: &str) {
@@ -99,7 +105,7 @@ impl Server {
     }
 
     // Probably we can configure this with the answers
-    fn spawn_evaluator_thread(self, receiver: ChannelRecv) {
+    fn spawn_evaluator_thread(mut self, receiver: ChannelRecv) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             while let Ok((opcion, sender)) = receiver.recv() {
                 match opcion.as_str() {
@@ -110,6 +116,9 @@ impl Server {
                         sender.send("Incorrecto".to_string()).unwrap();
                     }
                 }
+                //let packet_to_send = packet::command_generator(packet,
+                  //                                             &mut self.kahoot_game);
+                //sender.send(packet_to_send).unwrap();
             }
             Ok(())
         });
