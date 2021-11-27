@@ -48,6 +48,15 @@ fn decode_package(bytes: &[u8]) -> Result<Package, String> {
         'C' => {
             let player_name = str::from_utf8(&bytes[1..]).unwrap().to_string();
             Ok(Package::Connect{ player_name })
+        },
+        'S' => {
+            let player_id = str::from_utf8(&bytes[1..]).unwrap().to_string();
+            Ok(Package::StartGame{ player_id })
+        },
+        'R' => {
+            let player_id = str::from_utf8(&bytes[1..2]).unwrap().to_string();
+            let response = str::from_utf8(&bytes[2..]).unwrap().to_string();
+            Ok(Package::Response{ player_id, response })
         }
         _ => { Err("Error parseando el paquete enviado".to_string()) }
     }

@@ -2,13 +2,16 @@
 pub enum Package {
     Connect {
         player_name: String,
-    }/*,
-    ACKConnect {
+    },
+    StartGame {
         player_id: String,
     },
     Response {
         player_id: String,
         response: String,
+    }/*,
+    ACKConnect {
+        player_id: String,
     },
     Question {
         question: String,

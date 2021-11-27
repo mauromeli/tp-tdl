@@ -68,12 +68,23 @@ impl Server {
     fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
         let mut client = Client::new(client);
 
-        let package = client.recv();
-        match package {
-            Package::Connect { player_name } => client.send(&"ackconnect".to_string()),
+        while let package = client.recv() {
+            match package {
+                Package::Connect { player_name } => client.send(&"ackconnect".to_string()),
+                Package::StartGame { player_id } => {
+                    println!("start game");
+                    client.send(&"pregunta".to_string())
+                },
+                Package::Response { player_id, response } => {
+                    println!("respuesta: {}, player_id: {}", response, player_id);
+                    client.send(&"correcto - pregunta".to_string());
+                    //client.send(&"pregunta".to_string())
+                }
+            }
         }
 
-        client.send(&"Pregunta".to_string());
+
+
         //println!("Selected option: {}", recv_string);
         /*
         let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();

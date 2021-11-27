@@ -1,6 +1,5 @@
 mod client;
 mod packages;
-mod generate_packages;
 
 use crate::client::Client;
 use crate::packages::Package;
