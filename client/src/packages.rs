@@ -1,8 +1,7 @@
-#[derive(Debug)]
 pub enum Package {
     Connect {
         player_name: String,
-    }/*,
+    },
     ACKConnect {
         player_id: String,
     },
@@ -17,5 +16,5 @@ pub enum Package {
     FinishGame {
         player_id: String,
     }
-    */
 }
+

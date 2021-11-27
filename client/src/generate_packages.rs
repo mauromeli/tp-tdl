@@ -1,6 +1,6 @@
 use crate::packages::Package;
 
-pub fn generate(params: Vec<String>, id_package: &str) -> Result<Package, String> {
+pub fn generate(id_package: &str, params: Vec<String>) -> Result<Package, String> {
     match id_package {
         "C" => generate_connect(params),
         "A" => generate_ack_connect(params),

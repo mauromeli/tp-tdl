@@ -6,6 +6,7 @@ use std::thread::JoinHandle;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
 use crate::client::Client;
+use crate::packages::Package;
 
 const EXIT_KEY: char = 'q';
 
@@ -65,18 +66,22 @@ impl Server {
     }
 
     fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
-        let mut client = Server::connect_client(client, sender.clone());
+        let mut client = Client::new(client);
 
-        client.send(&"Mensaje".to_string());
+        let package = client.recv();
+        match package {
+            Package::Connect { player_name } => client.send(&"ackconnect".to_string()),
+        }
 
-        let recv_string = client.recv();
-        println!("Selected option: {}", recv_string);
 
+        //println!("Selected option: {}", recv_string);
+        /*
         let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();
         sender.send((recv_string, ch_sender)).unwrap();
 
         let response = ch_recv.recv().unwrap();
         client.send(&response);
+        */
         Ok(())
     }
 
@@ -103,8 +108,7 @@ impl Server {
         client.send(&"Ingrese su nombre de usuario".to_string());
 
         let recv_string = client.recv();
-        println!("Nombre de usuario: {}", recv_string);
-
+        println!("Nombre de usuario: {:?}", recv_string);
 
         return client;
     }
