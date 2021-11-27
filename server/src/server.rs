@@ -6,6 +6,7 @@ use std::thread::JoinHandle;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
 use crate::client::Client;
+use crate::model::packet;
 
 const EXIT_KEY: char = 'q';
 
@@ -80,18 +81,53 @@ impl Server {
         Ok(())
     }
 
+    /*
+    command_generator() -> Result(Paquete, Err)
+
+	array = C,Mauro
+	match array[0] {
+		c => connect_generator(array),
+		S =>
+	}
+
+	connect_generator(array) -> Paquetes {}
+
+
+	enum Paquetes {
+		CONNECT(String: name),
+		ACKCONNECT(Sring: id_player),
+	}
+
+	paquete = command_generator()
+
+	match(paquete) {
+		CONNECT(name) => connectarse_al_juego(name),
+		RESPUESTA()
+	}
+    */
+
+
     // Probably we can configure this with the answers
     fn spawn_evaluator_thread(self, receiver: ChannelRecv) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-            while let Ok((opcion, sender)) = receiver.recv() {
-                match opcion.as_str() {
-                    "a" => {
-                        sender.send("Correcto".to_string()).unwrap();
+            while let Ok((option, sender)) = receiver.recv() {
+                let mut packet;
+                match option.chars().nth(0).unwrap() {
+                   'C' => {
+                        packet = packet::connect_generator(option);
+                    }
+                   'R' => {
+                        packet = packet::answer_generator(option);
+                    }
+                   'S' => {
+                        packet = packet::score_generator(option);
                     }
                     _ => {
-                        sender.send("Incorrecto".to_string()).unwrap();
+                        packet = packet::error_generator(option);
                     }
                 }
+                let packet_to_send = packet::command_generator(packet);
+                sender.send(packet_to_send).unwrap();
             }
             Ok(())
         });
