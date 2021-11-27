@@ -65,7 +65,7 @@ impl Server {
     }
 
     fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
-        let mut client = Client::new(client);
+        let mut client = Server::connect_client(client, sender.clone());
 
         client.send(&"Mensaje".to_string());
 
@@ -95,5 +95,17 @@ impl Server {
             }
             Ok(())
         });
+    }
+
+    fn connect_client(client: TcpStream, sender: ChannelSender) -> Client {
+        let mut client = Client::new(client);
+
+        client.send(&"Ingrese su nombre de usuario".to_string());
+
+        let recv_string = client.recv();
+        println!("Nombre de usuario: {}", recv_string);
+
+
+        return client;
     }
 }

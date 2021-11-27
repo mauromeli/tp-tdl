@@ -19,11 +19,15 @@ impl Client {
         println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
 
         let mut buffer = String::new();
-        io::stdin().read_line(&mut buffer).unwrap();
-        buffer.pop(); // Remove newline
-        stream.write(buffer.as_bytes()).unwrap();
 
-        bytes_received = stream.read(&mut recv_buffer).unwrap();
-        println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
+        while io::stdin().read_line(&mut buffer).ok().unwrap() != 0{
+            buffer.pop(); // Remove newline
+            stream.write(buffer.as_bytes()).unwrap();
+
+            bytes_received = stream.read(&mut recv_buffer).unwrap();
+            println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
+            buffer = String::new();
+        }
+
     }
 }
