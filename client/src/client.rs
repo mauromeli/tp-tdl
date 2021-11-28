@@ -22,21 +22,20 @@ impl Client {
     }
 
     pub fn run(&mut self, host: &str, port: &str) {
-
         let player_name = self.name_consultor();
 
         let addr = &format!("{}:{}", host, port);
         let mut stream = TcpStream::connect(addr).unwrap();
 
         let bytes = [
-                "C".to_string().as_bytes(),
-                player_name.as_bytes(),
-            ].concat();
+            "C".to_string().as_bytes(),
+            player_name.as_bytes(),
+        ].concat();
 
         stream.write(&bytes);
 
         let mut recv_buffer = [0; 1024];
-        let bytes_received = stream.read(&mut recv_buffer).unwrap();
+        let mut bytes_received = stream.read(&mut recv_buffer).unwrap();
         //let response = from_utf8(&mut recv_buffer[0..bytes_received]).unwrap();
 
         let ack_package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
@@ -44,33 +43,50 @@ impl Client {
         match ack_package {
             Package::ACKConnect { player_id } => {
                 println!("Esperando Preguntas.... \n");
-                let bytes = [
-                        "S".to_string().as_bytes(),
-                        player_id.as_bytes(),
-                    ].concat();
-                stream.write(&bytes);
-            },
+            }
             _ => {
                 println!("couldn't connect");
-                return
+                return;
             }
         }
 
-        let mut recv_buffer = [0; 1024];
-        while let Ok(bytes_received) = stream.read(&mut recv_buffer) {
+        loop {
+            let bytes = [
+                "H".to_string().as_bytes(), //Check Status
+                "1".as_bytes(),
+            ].concat();
+            stream.write(&bytes);
+
+            let mut recv_buffer = [0; 1024];
+            bytes_received = stream.read(&mut recv_buffer).unwrap();
             //let mut bytes_received = stream.read(&mut recv_buffer).unwrap();
-            let package = decode_package(&mut recv_buffer[0..bytes_received]);
 
-            if let Ok(Package::Question{ question, options }) = package {
-                println!("Pregunta: {}", question);
-                println!("Opcion A: {}", options[0]);
-                println!("Opcion B: {}", options[1]);
-                println!("Opcion C: {}", options[2]);
-                println!("Opcion D: {}", options[3]);
+            let package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
 
-            } else if let Ok(Package::EndGame { player_1_name, score_1,
-                player_2_name, score_2, player_3_name, score_3,
-                player_4_name, score_4}) = package {
+            match package {
+                Package::Question { question, options } => {
+                    println!("Pregunta: {}", question);
+                    println!("Opcion A: {}", options[0]);
+                    println!("Opcion B: {}", options[1]);
+                    println!("Opcion C: {}", options[2]);
+                    println!("Opcion D: {}", options[3]);
+
+                    let mut buffer = String::new();
+                    io::stdin().read_line(&mut buffer).unwrap();
+                    buffer.pop(); // Remove newline
+
+                    let bytes = [
+                        "R".to_string().as_bytes(),
+                        "1".as_bytes(),
+                        buffer.as_bytes(),
+                    ].concat();
+                    stream.write(&bytes);
+                }
+                Package::EndGame {
+                    player_1_name, score_1,
+                    player_2_name, score_2, player_3_name, score_3,
+                    player_4_name, score_4
+                } => {
                     println!("Puntajes:");
                     println!("{}: {} puntos", player_1_name, score_1);
                     println!("{}: {} puntos", player_2_name, score_2);
@@ -78,31 +94,9 @@ impl Client {
                     println!("{}: {} puntos", player_4_name, score_4);
                     break;
                 }
-
-            let mut buffer = String::new();
-            io::stdin().read_line(&mut buffer).unwrap();
-            buffer.pop(); // Remove newline
-            
-            let bytes = [
-                    "R".to_string().as_bytes(),
-                    "1".as_bytes(),
-                    buffer.as_bytes(),
-                ].concat();
-            stream.write(&bytes);
-
-            let bytes = [
-                    "H".to_string().as_bytes(), //Check Status
-                    "1".as_bytes(),
-                ].concat();
-            stream.write(&bytes);
-
-            //println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
-
-
-            //stream.write(buffer.as_bytes()).unwrap();
-
-            //bytes_received = stream.read(&mut recv_buffer).unwrap();
-            //println!("{:?}", from_utf8(&mut recv_buffer[0..bytes_received]).unwrap());
+                Package::Wait {player_id : _} => (),
+                _ => panic!()
+            }
         }
     }
 
@@ -128,3 +122,18 @@ impl Client {
         "BOT".to_string()
     }
 }
+
+/*
+Cliente
+- Connect (write) -> ACK (read)
+- loop
+    Checkstatus (write)
+        - WAIT (read)
+        - QUESTION (read)
+            - ANSWER (write)
+            x ACKANSWER (read)
+        - Endgame (read)
+
+
+    1 seg?
+*/

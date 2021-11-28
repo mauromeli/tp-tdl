@@ -72,10 +72,13 @@ impl Server {
 
     fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
         let mut client = Client::new(client);
-
+        let mut var = 1;
         while let package = client.recv() {
             match package {
-                Package::Connect { player_name } => client.send(&"A1".to_string()),
+                Package::Connect { player_name } => {
+                    println!("[INFO] Se conecto {}", player_name);
+                    client.send(&"A1".to_string())
+                },
                 Package::StartGame { player_id } => {
                     println!("start game");
                     client.send(&"P¿Cuantos años...?|10 años-200 años-400 años-20 años".to_string())
@@ -83,10 +86,18 @@ impl Server {
                 Package::Response { player_id, response } => {
                     println!("respuesta: {}, player_id: {}", response, player_id);
                     //client.send(&"Ejugador1,43,jugador2,40,jugador3,30,jugador4,33".to_string());
-                    client.send(&"correcto - siguiente pregunta".to_string());
+                    //client.send(&"Rcorrecto - siguiente pregunta".to_string());
                 },
                 Package::CheckStatus { player_id } => {
                     println!("check status, player_id {}", player_id);
+                    println!("entro al check status");
+                    if var % 2 == 0 {
+                        var += 1;
+                        client.send(&"W".to_string());
+                    } else {
+                        var += 1;
+                        client.send(&"P¿Cuantos años...?|10 años-200 años-400 años-20 años".to_string())
+                    }
                 }
             }
         }

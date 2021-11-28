@@ -1,6 +1,7 @@
 use crate::packages::Package;
 
 pub fn decode_package(bytes: &[u8]) -> Result<Package, String> {
+    //println!("byte {}", bytes[0] as char);
     match bytes[0] as char {
         'A' => {
             let player_id = std::str::from_utf8(&bytes[1..]).unwrap().to_string();
@@ -55,7 +56,8 @@ pub fn decode_package(bytes: &[u8]) -> Result<Package, String> {
         'W' => {
             let player_id = std::str::from_utf8(&bytes[1..]).unwrap().to_string();
             Ok(Package::Wait{ player_id })
-        }
+        },
+
         _ => {
             Err("Error parseando el paquete enviado".to_string())
         }
