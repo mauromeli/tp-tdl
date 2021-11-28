@@ -5,9 +5,12 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
+use std::str;
 use crate::client::Client;
 use crate::packages::Package;
 use crate::model::kahoot::Kahoot;
+use crate::package_handlers::package_handlers;
+use crate::model::question::Question;
 
 const EXIT_KEY: char = 'q';
 
@@ -15,13 +18,13 @@ type ChannelSender = Sender<(String, Sender<String>)>;
 type ChannelRecv = Receiver<(String, Sender<String>)>;
 
 pub struct Server {
-    pub kahoot_game: Kahoot
+    // pub kahoot_game: Kahoot
 }
 
 impl Server {
     pub fn new() -> Server {
         Server {
-            kahoot_game: Kahoot::new()
+            // kahoot_game: Kahoot::new()
         }
     }
 
@@ -89,33 +92,32 @@ impl Server {
     // Probably we can configure this with the answers
     fn spawn_evaluator_thread(mut self, receiver: Receiver<(Package, Sender<Package>)>) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-            let mut var = 1;
+            // TODO: Read questions from file
+            let options = vec!["River".to_string(), "Boca".to_string(),
+                               "Gremio".to_string(), "Palmeiras".to_string()];
+            let question = Question::new("¿Quién ganó la Libertadores 2018?".to_string(),
+                                         options,
+                                         "River".to_string());
+
+            let mut kahoot = Kahoot::new(vec![question]);
             while let (package, sender) = receiver.recv().unwrap() {
                 match package {
                     Package::Connect { player_name } => {
                         println!("[INFO] - Se conectó {}", player_name);
-                        sender.send(Package::StartGame{ player_id: "1".to_string() });
+                        let player_id = package_handlers::handle_connect_package(&mut kahoot, player_name);
+                        sender.send(Package::StartGame{ player_id: player_id.to_string() });
                     },
-                    Package::StartGame { player_id } => {
-                        println!("start game");
-                        //client.send(&"P¿Cuantos años...?|10 años-200 años-400 años-20 años".to_string());
+                    Package::CheckStatus { player_id } => {
+                        let result = package_handlers::handle_check_status_package(&kahoot, player_id.clone());
+                        match result {
+                            // There is a new question for player_id
+                            Some((question, options)) => sender.send(Package::Question{ question, options }),
+                            // Wait
+                            None => sender.send(Package::Wait{ player_id }),
+                        };
                     },
                     Package::Response { player_id, response } => {
                         println!("respuesta: {}, player_id: {}", response, player_id);
-                    },
-                    Package::CheckStatus { player_id } => {
-                        // TODO: Delete when kahoot model is connected to server.
-                        // Only to swat between WAIT and Answer
-                        if var % 2 == 0 {
-                            var += 1;
-                            sender.send(Package::Wait{ player_id: "1".to_string() });
-                        } else {
-                            var += 1;
-                            sender.send(Package::Question{ question: "¿Quién ganó la Libertadores 2018?".to_string(),
-                                options: vec!["River".to_string(), "Boca".to_string(),
-                                              "Gremio".to_string(), "Palmeiras".to_string()]
-                            });
-                        }
                     }
                     _ => {}
                 }
@@ -124,7 +126,3 @@ impl Server {
         });
     }
 }
-
-//let packet_to_send = packet::command_generator(packet,
-//                                             &mut self.kahoot_game);
-//sender.send(packet_to_send).unwrap();

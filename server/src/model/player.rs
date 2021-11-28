@@ -9,7 +9,7 @@ pub struct Player {
 }
 impl Clone for Player{
     fn clone(&self) -> Self {
-        return Player{
+        return Player {
             id: self.id.clone(),
             name: self.name.clone(),
             points: self.points.clone()
@@ -36,8 +36,8 @@ mod tests {
 
     #[test]
     fn player_id_increases_correctly() {
-        let first_player = Player::new();
-        let second_player = Player::new();
+        let first_player = Player::new("Juan".to_string());
+        let second_player = Player::new("Pedro".to_string());
         assert_eq!(first_player.id, 1);
         assert_eq!(second_player.id, 2);
     }
