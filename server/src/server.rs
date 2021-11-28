@@ -89,8 +89,8 @@ impl Server {
                     //client.send(&"Rcorrecto - siguiente pregunta".to_string());
                 },
                 Package::CheckStatus { player_id } => {
-                    println!("check status, player_id {}", player_id);
-                    println!("entro al check status");
+                    // TODO: Delete when kahoot model is connected to server.
+                    // Only to swat between WAIT and Answer
                     if var % 2 == 0 {
                         var += 1;
                         client.send(&"W".to_string());
