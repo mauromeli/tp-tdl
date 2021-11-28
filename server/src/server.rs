@@ -72,14 +72,17 @@ impl Server {
 
     fn client_handler(client: TcpStream, sender: Sender<(Package, Sender<Package>)>) -> io::Result<()> {
         let mut client = Client::new(client);
-
-        let recv_string = client.recv();
-
         let (ret_sender, ret_recv): (Sender<Package>, Receiver<Package>) = mpsc::channel();
-        sender.send((recv_string, ret_sender));
 
-        let package = ret_recv.recv().unwrap();
-        client.send(format!("{}", package));
+        loop {
+            let recv_package = client.recv();
+
+            sender.send((recv_package, ret_sender.clone()));
+
+            let package = ret_recv.recv().unwrap();
+            println!("{}", format!("{}", package));
+            client.send(format!("{}", package));
+        }
         Ok(())
     }
 
@@ -99,18 +102,19 @@ impl Server {
                     },
                     Package::Response { player_id, response } => {
                         println!("respuesta: {}, player_id: {}", response, player_id);
-                        //client.send(&"Ejugador1,43,jugador2,40,jugador3,30,jugador4,33".to_string());
-                        //client.send(&"Rcorrecto - siguiente pregunta".to_string());
                     },
                     Package::CheckStatus { player_id } => {
                         // TODO: Delete when kahoot model is connected to server.
                         // Only to swat between WAIT and Answer
                         if var % 2 == 0 {
                             var += 1;
-                            sender.send(Package::StartGame{ player_id: "1".to_string() });
+                            sender.send(Package::Wait{ player_id: "1".to_string() });
                         } else {
                             var += 1;
-                            sender.send(Package::StartGame{ player_id: "1".to_string() });
+                            sender.send(Package::Question{ question: "¿Quién ganó la Libertadores 2018?".to_string(),
+                                options: vec!["River".to_string(), "Boca".to_string(),
+                                              "Gremio".to_string(), "Palmeiras".to_string()]
+                            });
                         }
                     }
                     _ => {}

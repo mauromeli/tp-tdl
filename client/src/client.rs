@@ -55,6 +55,7 @@ impl Client {
                 "H".to_string().as_bytes(), //Check Status
                 "1".as_bytes(),
             ].concat();
+
             stream.write(&bytes);
 
             let mut recv_buffer = [0; 1024];
@@ -81,7 +82,7 @@ impl Client {
                         buffer.as_bytes(),
                     ].concat();
                     stream.write(&bytes);
-                }
+                },
                 Package::EndGame {
                     player_1_name, score_1,
                     player_2_name, score_2, player_3_name, score_3,
@@ -93,7 +94,7 @@ impl Client {
                     println!("{}: {} puntos", player_3_name, score_3);
                     println!("{}: {} puntos", player_4_name, score_4);
                     break;
-                }
+                },
                 Package::Wait {player_id : _} => (),
                 _ => panic!()
             }

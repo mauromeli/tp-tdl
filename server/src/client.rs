@@ -22,6 +22,7 @@ impl Client {
     pub fn recv(&mut self) -> Package {
         let mut buffer = [0; 1024];
         let bytes_read = self.stream.read(&mut buffer).unwrap();
+        println!("{}", str::from_utf8(&buffer[0..bytes_read]).unwrap().to_string());
         decode_package(&buffer).unwrap()
     }
 
