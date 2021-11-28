@@ -22,11 +22,10 @@ impl Client {
     pub fn recv(&mut self) -> Package {
         let mut buffer = [0; 1024];
         let bytes_read = self.stream.read(&mut buffer).unwrap();
-        //let recv_string = str::from_utfuse crate::client::Client;8(&buffer[0..bytes_read]).unwrap().to_string();
         decode_package(&buffer).unwrap()
     }
 
-    pub fn send(&mut self, str: &String) {
+    pub fn send(&mut self, str: String) {
         self.stream.write_all(str.as_bytes()).unwrap();
     }
 }

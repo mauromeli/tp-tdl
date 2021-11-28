@@ -42,7 +42,7 @@ impl Client {
 
         match ack_package {
             Package::ACKConnect { player_id } => {
-                println!("Esperando Preguntas.... \n");
+                println!("Esperando Preguntas... Soy {} \n", player_id);
             }
             _ => {
                 println!("couldn't connect");

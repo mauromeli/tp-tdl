@@ -48,7 +48,7 @@ impl Server {
             // FIXME: This should not be here
             // let questions: Vec<question::Question> = file_reader::reader(); //we should create game's class
 
-            let (in_sender, in_recv): (ChannelSender, ChannelRecv) = mpsc::channel();
+            let (in_sender, in_recv): (Sender<(Package, Sender<Package>)>, Receiver<(Package, Sender<Package>)>) = mpsc::channel();
             self.spawn_evaluator_thread(in_recv);
 
             while let Ok(connection) = listener.accept() {
@@ -70,68 +70,57 @@ impl Server {
         });
     }
 
-    fn client_handler(client: TcpStream, sender: ChannelSender) -> io::Result<()> {
+    fn client_handler(client: TcpStream, sender: Sender<(Package, Sender<Package>)>) -> io::Result<()> {
         let mut client = Client::new(client);
-        let mut var = 1;
-        while let package = client.recv() {
-            match package {
-                Package::Connect { player_name } => {
-                    println!("[INFO] Se conecto {}", player_name);
-                    client.send(&"A1".to_string())
-                },
-                Package::StartGame { player_id } => {
-                    println!("start game");
-                    client.send(&"P¿Cuantos años...?|10 años-200 años-400 años-20 años".to_string())
-                },
-                Package::Response { player_id, response } => {
-                    println!("respuesta: {}, player_id: {}", response, player_id);
-                    //client.send(&"Ejugador1,43,jugador2,40,jugador3,30,jugador4,33".to_string());
-                    //client.send(&"Rcorrecto - siguiente pregunta".to_string());
-                },
-                Package::CheckStatus { player_id } => {
-                    // TODO: Delete when kahoot model is connected to server.
-                    // Only to swat between WAIT and Answer
-                    if var % 2 == 0 {
-                        var += 1;
-                        client.send(&"W".to_string());
-                    } else {
-                        var += 1;
-                        client.send(&"P¿Cuantos años...?|10 años-200 años-400 años-20 años".to_string())
-                    }
-                }
-            }
-        }
 
+        let recv_string = client.recv();
 
+        let (ret_sender, ret_recv): (Sender<Package>, Receiver<Package>) = mpsc::channel();
+        sender.send((recv_string, ret_sender));
 
-        //println!("Selected option: {}", recv_string);
-        /*
-        let (ch_sender, ch_recv): (Sender<String>, Receiver<String>) = mpsc::channel();
-        sender.send((recv_string, ch_sender)).unwrap();
-
-        let response = ch_recv.recv().unwrap();
-        client.send(&response);
-        */
+        let package = ret_recv.recv().unwrap();
+        client.send(format!("{}", package));
         Ok(())
     }
 
     // Probably we can configure this with the answers
-    fn spawn_evaluator_thread(mut self, receiver: ChannelRecv) {
+    fn spawn_evaluator_thread(mut self, receiver: Receiver<(Package, Sender<Package>)>) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-            while let Ok((opcion, sender)) = receiver.recv() {
-                match opcion.as_str() {
-                    "a" => {
-                        sender.send("Correcto".to_string()).unwrap();
+            let mut var = 1;
+            while let (package, sender) = receiver.recv().unwrap() {
+                match package {
+                    Package::Connect { player_name } => {
+                        println!("[INFO] - Se conectó {}", player_name);
+                        sender.send(Package::StartGame{ player_id: "1".to_string() });
+                    },
+                    Package::StartGame { player_id } => {
+                        println!("start game");
+                        //client.send(&"P¿Cuantos años...?|10 años-200 años-400 años-20 años".to_string());
+                    },
+                    Package::Response { player_id, response } => {
+                        println!("respuesta: {}, player_id: {}", response, player_id);
+                        //client.send(&"Ejugador1,43,jugador2,40,jugador3,30,jugador4,33".to_string());
+                        //client.send(&"Rcorrecto - siguiente pregunta".to_string());
+                    },
+                    Package::CheckStatus { player_id } => {
+                        // TODO: Delete when kahoot model is connected to server.
+                        // Only to swat between WAIT and Answer
+                        if var % 2 == 0 {
+                            var += 1;
+                            sender.send(Package::StartGame{ player_id: "1".to_string() });
+                        } else {
+                            var += 1;
+                            sender.send(Package::StartGame{ player_id: "1".to_string() });
+                        }
                     }
-                    _ => {
-                        sender.send("Incorrecto".to_string()).unwrap();
-                    }
+                    _ => {}
                 }
-                //let packet_to_send = packet::command_generator(packet,
-                  //                                             &mut self.kahoot_game);
-                //sender.send(packet_to_send).unwrap();
             }
             Ok(())
         });
     }
 }
+
+//let packet_to_send = packet::command_generator(packet,
+//                                             &mut self.kahoot_game);
+//sender.send(packet_to_send).unwrap();
