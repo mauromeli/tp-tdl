@@ -5,14 +5,17 @@ thread_local!(static NEXT_ID: Cell<u8> = Cell::new(1));
 pub struct Player {
     pub id: u8,
     pub points: u32,
-    pub name: String
+    pub name: String,
+    pub correct_questions: u8
 }
+
 impl Clone for Player{
     fn clone(&self) -> Self {
         return Player {
             id: self.id.clone(),
             name: self.name.clone(),
-            points: self.points.clone()
+            points: self.points.clone(),
+            correct_questions: self.correct_questions.clone()
         }
     }
 }
@@ -21,12 +24,16 @@ impl Player {
         NEXT_ID.with(|next_id| {
             let id = next_id.get();
             next_id.set(id + 1);
-            Player { id, name, points: 0 }
+            Player { id, name, points: 0, correct_questions: 0 }
         })
     }
 
     pub fn add_points(&mut self, points: u32) {
         self.points += points;
+
+        if points > 0 {
+            self.correct_questions += 1
+        }
     }
 }
 

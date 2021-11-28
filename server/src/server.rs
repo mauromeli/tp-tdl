@@ -11,6 +11,7 @@ use crate::packages::Package;
 use crate::model::kahoot::Kahoot;
 use crate::package_handlers::package_handlers;
 use crate::model::question::Question;
+use crate::package_handlers::package_handlers::CheckStatusRet;
 
 const EXIT_KEY: char = 'q';
 
@@ -48,9 +49,6 @@ impl Server {
             let listener = TcpListener::bind(addr).unwrap();
             println!("[INFO] - Listening on port {}", port_copy);
 
-            // FIXME: This should not be here
-            // let questions: Vec<question::Question> = file_reader::reader(); //we should create game's class
-
             let (in_sender, in_recv): (Sender<(Package, Sender<Package>)>, Receiver<(Package, Sender<Package>)>) = mpsc::channel();
             self.spawn_evaluator_thread(in_recv);
 
@@ -83,7 +81,6 @@ impl Server {
             sender.send((recv_package, ret_sender.clone()));
 
             let package = ret_recv.recv().unwrap();
-            println!("{}", format!("{}", package));
             client.send(format!("{}", package));
         }
         Ok(())
@@ -110,14 +107,29 @@ impl Server {
                     Package::CheckStatus { player_id } => {
                         let result = package_handlers::handle_check_status_package(&kahoot, player_id.clone());
                         match result {
-                            // There is a new question for player_id
-                            Some((question, options)) => sender.send(Package::Question{ question, options }),
-                            // Wait
-                            None => sender.send(Package::Wait{ player_id }),
+                            CheckStatusRet::Question { question, options } => {
+                                sender.send(Package::Question{ question, options })
+                            },
+                            CheckStatusRet::End { players } => {
+                                // TODO: Correct this
+                                let players_names : Vec<String> = players.keys().cloned().collect();
+                                let players_points : Vec<String> = players.values().cloned().collect();
+                                sender.send(Package::EndGame{
+                                    player_1_name: players_names[0].clone(), score_1: players_points[0].clone(),
+                                    player_2_name: "Empty".to_string(), score_2: "0".to_string(),
+                                    player_3_name: "Empty".to_string(), score_3: "0".to_string(),
+                                    player_4_name: "Empty".to_string(), score_4: "0".to_string()
+                                })
+                            },
+                            CheckStatusRet::Wait {} => {
+                                sender.send(Package::Wait{ player_id })
+                            }
                         };
                     },
                     Package::Response { player_id, response } => {
-                        println!("respuesta: {}, player_id: {}", response, player_id);
+                        println!("Respuesta: {}, player_id: {}", response, player_id);
+                        package_handlers::handle_response_package(&mut kahoot, player_id.clone(), response);
+                        sender.send(Package::Wait{ player_id });
                     }
                     _ => {}
                 }

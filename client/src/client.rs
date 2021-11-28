@@ -2,6 +2,7 @@ use std::io;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::io::stdin;
+use std::{thread, time};
 use crate::packages::Package;
 use crate::decode_packages::decode_package;
 
@@ -52,7 +53,7 @@ impl Client {
 
         loop {
             let bytes = [
-                "H".to_string().as_bytes(), //Check Status
+                "W".to_string().as_bytes(), //Check Status
                 "1".as_bytes(),
             ].concat();
 
@@ -95,7 +96,10 @@ impl Client {
                     println!("{}: {} puntos", player_4_name, score_4);
                     break;
                 },
-                Package::Wait {player_id : _} => (),
+                Package::Wait {player_id : _} => {
+                    let one_second = time::Duration::from_secs(1);
+                    thread::sleep(one_second);
+                },
                 _ => panic!()
             }
         }

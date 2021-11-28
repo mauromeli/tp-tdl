@@ -7,7 +7,7 @@ static PLAYER_NOT_FOUND : &str = "Could not find player";
 pub struct Kahoot {
     questions: Vec<Question>,
     current_question: u8,
-    players: HashMap<u8, Player>,
+    pub players: HashMap<u8, Player>,
     players_who_answered: Vec<u8>
 }
 
@@ -35,10 +35,11 @@ impl Kahoot {
         self.get_players_amount() == Kahoot::REQUIRED_PLAYERS
     }
 
-    pub fn should_end(&mut self) -> bool {
+    pub fn should_end(&self) -> bool {
         self.current_question == self.questions.len() as u8
     }
 
+    // TODO: Remove
     pub fn get_winner(&mut self) -> (u8, u32) {
         //In case of draw, the first player who had been added to the list wins.
         let mut id_winner :u8 = 0;
@@ -62,7 +63,6 @@ impl Kahoot {
         let current_question : &Question = self.questions.
             get_mut(self.current_question as usize).unwrap();
 
-        let player_prev_points : u32 = player.points;
         player.add_points(current_question.get_points_for(option));
 
         self.players_who_answered.push(player_id);
@@ -71,20 +71,22 @@ impl Kahoot {
             self.current_question += 1;
             self.players_who_answered.clear();
         }
-
-        if player_prev_points < player.points {
-            // Player answered correctly
-        } else {
-            // Player answered incorrectly
-        }
     }
 
     pub fn player_answered_current_question(&self, player_id: u8) -> bool {
+        if self.should_end() {
+            return false;
+        }
+
         self.players_who_answered.contains(&player_id)
     }
 
-    pub fn current_question(&self) -> &Question {
-        self.questions.get(self.current_question as usize).unwrap()
+    pub fn current_question(&self) -> Option<&Question> {
+        if self.should_end() {
+            None
+        } else {
+            Some(self.questions.get(self.current_question as usize).unwrap())
+        }
     }
 }
 

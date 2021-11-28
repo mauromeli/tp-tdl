@@ -57,7 +57,7 @@ fn decode_package(bytes: &[u8]) -> Result<Package, String> {
             let response = str::from_utf8(&bytes[2..]).unwrap().to_string();
             Ok(Package::Response{ player_id, response })
         },
-        'H' => { //Check status, si se saca el StartGame le cambiamos la letra a S
+        'W' => { //Check status, si se saca el StartGame le cambiamos la letra a S
             let player_id = std::str::from_utf8(&bytes[1..]).unwrap().to_string();
             Ok(Package::CheckStatus{ player_id })
         }
