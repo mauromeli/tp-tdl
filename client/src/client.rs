@@ -8,15 +8,6 @@ use crate::decode_packages::decode_package;
 
 pub struct Client {}
 
-/*
-Cliente:
-	- Una vez conectado loopear ping (¿Checkstatus?)
-	- Matchear
-		- Pregunta -> (generar respuesta) ->Respuesta
-		- Fin Partida -> Tabla puntajes
-		- WAIT
- */
-
 impl Client {
     pub fn new() -> Client {
         Client {}
@@ -40,10 +31,12 @@ impl Client {
         //let response = from_utf8(&mut recv_buffer[0..bytes_received]).unwrap();
 
         let ack_package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
+        let mut player: String;
 
         match ack_package {
             Package::ACKConnect { player_id } => {
                 println!("Esperando Preguntas... Soy {} \n", player_id);
+                player = player_id;
             }
             _ => {
                 println!("couldn't connect");
@@ -54,14 +47,13 @@ impl Client {
         loop {
             let bytes = [
                 "W".to_string().as_bytes(), //Check Status
-                "1".as_bytes(),
+                player.clone().as_bytes(),
             ].concat();
 
             stream.write(&bytes);
 
             let mut recv_buffer = [0; 1024];
             bytes_received = stream.read(&mut recv_buffer).unwrap();
-            //let mut bytes_received = stream.read(&mut recv_buffer).unwrap();
 
             let package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
 
@@ -79,14 +71,15 @@ impl Client {
 
                     let bytes = [
                         "R".to_string().as_bytes(),
-                        "1".as_bytes(),
+                        player.clone().as_bytes(),
                         buffer.as_bytes(),
                     ].concat();
                     stream.write(&bytes);
-                },
+                }
                 Package::EndGame {
                     player_1_name, score_1,
-                    player_2_name, score_2, player_3_name, score_3,
+                    player_2_name, score_2,
+                    player_3_name, score_3,
                     player_4_name, score_4
                 } => {
                     println!("Puntajes:");
@@ -95,11 +88,11 @@ impl Client {
                     println!("{}: {} puntos", player_3_name, score_3);
                     println!("{}: {} puntos", player_4_name, score_4);
                     break;
-                },
-                Package::Wait {player_id : _} => {
+                }
+                Package::Wait { player_id: _ } => {
                     let one_second = time::Duration::from_secs(1);
                     thread::sleep(one_second);
-                },
+                }
                 _ => panic!()
             }
         }
@@ -127,18 +120,3 @@ impl Client {
         "BOT".to_string()
     }
 }
-
-/*
-Cliente
-- Connect (write) -> ACK (read)
-- loop
-    Checkstatus (write)
-        - WAIT (read)
-        - QUESTION (read)
-            - ANSWER (write)
-            x ACKANSWER (read)
-        - Endgame (read)
-
-
-    1 seg?
-*/

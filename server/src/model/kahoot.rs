@@ -12,7 +12,7 @@ pub struct Kahoot {
 }
 
 impl Kahoot {
-    const REQUIRED_PLAYERS : u8 = 1;
+    const REQUIRED_PLAYERS : u8 = 2;
 
     pub fn new(questions: Vec<Question>) -> Kahoot {
         Kahoot {

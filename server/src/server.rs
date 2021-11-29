@@ -90,11 +90,11 @@ impl Server {
     fn spawn_evaluator_thread(mut self, receiver: Receiver<(Package, Sender<Package>)>) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             // TODO: Read questions from file
-            let options = vec!["River".to_string(), "Boca".to_string(),
-                               "Gremio".to_string(), "Palmeiras".to_string()];
-            let question = Question::new("¿Quién ganó la Libertadores 2018?".to_string(),
+            let options = vec!["1952".to_string(), "1955".to_string(),
+                               "1960".to_string(), "1965".to_string()];
+            let question = Question::new("¿En que año se inauguro la FIUBA?".to_string(),
                                          options,
-                                         "River".to_string());
+                                         "1952".to_string());
 
             let mut kahoot = Kahoot::new(vec![question]);
             while let (package, sender) = receiver.recv().unwrap() {
@@ -114,6 +114,7 @@ impl Server {
                                 // TODO: Correct this
                                 let players_names : Vec<String> = players.keys().cloned().collect();
                                 let players_points : Vec<String> = players.values().cloned().collect();
+                                println!("Players: {:?}", players_names);
                                 sender.send(Package::EndGame{
                                     player_1_name: players_names[0].clone(), score_1: players_points[0].clone(),
                                     player_2_name: "Empty".to_string(), score_2: "0".to_string(),
