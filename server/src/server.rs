@@ -120,15 +120,17 @@ impl Server {
                             CheckStatusRet::Question { question, options } => {
                                 sender.send(Some(Package::Question{ question, options }))
                             },
-                            CheckStatusRet::End { players } => {
+                            CheckStatusRet::End { mut players } => {
                                 // TODO: Correct this
                                 let players_names : Vec<String> = players.keys().cloned().collect();
                                 let players_points : Vec<String> = players.values().cloned().collect();
+                                println!("Players: {:?}", players_names);
+
+                                for i in 0..players_names.len(){
+                                    players.insert(players_names[i].clone(), players_points[i].clone());
+                                }
                                 sender.send(Some(Package::EndGame{
-                                    player_1_name: players_names[0].clone(), score_1: players_points[0].clone(),
-                                    player_2_name: "Empty".to_string(), score_2: "0".to_string(),
-                                    player_3_name: "Empty".to_string(), score_3: "0".to_string(),
-                                    player_4_name: "Empty".to_string(), score_4: "0".to_string()
+                                    players
                                 }))
                             },
                             CheckStatusRet::Wait {} => {
@@ -143,7 +145,6 @@ impl Server {
                     _ => {}
                 }
             }
-
             Ok(())
         });
     }

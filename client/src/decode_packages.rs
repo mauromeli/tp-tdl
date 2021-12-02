@@ -1,4 +1,5 @@
 use crate::packages::Package;
+use std::collections::HashMap;
 
 pub fn decode_package(bytes: &[u8]) -> Result<Package, String> {
     match bytes[0] as char {
@@ -46,15 +47,14 @@ pub fn decode_package(bytes: &[u8]) -> Result<Package, String> {
             }
             string = std::str::from_utf8(&bytes[pos..]).unwrap().to_string();
             params.push(string.to_string());
+
+            let mut players : HashMap<String, String> = HashMap::new();
+            for i in (0..params.len()).step_by(2)  {
+                players.insert(params[i].clone(), params[i+1].clone());
+            }
+
             Ok(Package::EndGame {
-                player_1_name: params[0].clone(),
-                score_1: params[1].clone(),
-                player_2_name: params[2].clone(),
-                score_2: params[3].clone(),
-                player_3_name: params[4].clone(),
-                score_3: params[5].clone(),
-                player_4_name: params[6].clone(),
-                score_4: params[7].clone(),
+                players
             })
         }
         'W' => {

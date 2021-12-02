@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug)]
@@ -23,6 +24,10 @@ pub enum Package {
         options: Vec<String>,
     },
     EndGame {
+        players: HashMap<String, String>,
+    }
+/*
+    EndGame {
         player_1_name: String,
         score_1: String,
         player_2_name: String,
@@ -32,21 +37,31 @@ pub enum Package {
         player_4_name: String,
         score_4: String
     }
-}
 
+ */
+}
 impl std::fmt::Display for Package {
+
+
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+
         match self {
             Package::StartGame { player_id } => write!(f, "A{}", player_id),
             Package::Wait { player_id } => write!(f, "W{}", player_id),
             Package::Question { question, options } =>
                 write!(f, "P{}|{}-{}-{}-{}", question, options[0], options[1], options[2], options[3]),
-            Package::EndGame {
-                player_1_name, score_1, player_2_name, score_2,
-                player_3_name, score_3, player_4_name, score_4
-            } =>
-                write!(f, "E{},{},{},{},{},{},{},{}", player_1_name, score_1, player_2_name, score_2,
-                player_3_name, score_3, player_4_name, score_4),
+            Package::EndGame { players } => {
+                write!(f, "E").unwrap();
+                let mut i = 1;
+                for (key, value) in players {
+                    write!(f, "{},{}", key, value).unwrap();
+                    if i < players.len() {
+                        write!(f, ",").unwrap();
+                    }
+                    i = i + 1
+                }
+                write!(f, "")
+            },
             _ => write!(f, "ERROR WHILE FORMATTING PACKET!")
         }
     }
