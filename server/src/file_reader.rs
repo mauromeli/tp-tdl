@@ -3,7 +3,7 @@ use std::fs;
 use serde_json;
 
 pub fn reader() -> Vec<Question> {
-    let path = "../questions.json";
+    let path = "questions.json";
     let data = fs::read_to_string(path).expect("Unable to read file");
     let res: serde_json::Value = serde_json::from_str(&data).expect("Unable to parse");
 

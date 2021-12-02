@@ -7,6 +7,7 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::sync::mpsc;
 use std::str;
 use crate::client::Client;
+use crate::file_reader::reader;
 use crate::packages::Package;
 use crate::model::kahoot::Kahoot;
 use crate::package_handlers::package_handlers;
@@ -89,14 +90,8 @@ impl Server {
     // Probably we can configure this with the answers
     fn spawn_evaluator_thread(mut self, receiver: Receiver<(Package, Sender<Package>)>) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-            // TODO: Read questions from file
-            let options = vec!["1952".to_string(), "1955".to_string(),
-                               "1960".to_string(), "1965".to_string()];
-            let question = Question::new("¿En que año se inauguro la FIUBA?".to_string(),
-                                         options,
-                                         "1952".to_string());
-
-            let mut kahoot = Kahoot::new(vec![question]);
+            let questions = reader();
+            let mut kahoot = Kahoot::new(questions);
             while let (package, sender) = receiver.recv().unwrap() {
                 match package {
                     Package::Connect { player_name } => {
