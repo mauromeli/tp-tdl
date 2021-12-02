@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::fmt;
-use std::fmt::write;
 
 #[derive(Debug)]
 pub enum Package {
@@ -52,21 +51,17 @@ impl std::fmt::Display for Package {
             Package::Question { question, options } =>
                 write!(f, "P{}|{}-{}-{}-{}", question, options[0], options[1], options[2], options[3]),
             Package::EndGame { players } => {
-                write!(f, "E");
+                write!(f, "E").unwrap();
                 let mut i = 1;
                 for (key, value) in players {
-                    write!(f, "{},{}", key, value);
+                    write!(f, "{},{}", key, value).unwrap();
                     if i < players.len() {
-                        write!(f, ",");
+                        write!(f, ",").unwrap();
                     }
                     i = i + 1
                 }
                 write!(f, "")
             },
-                /*
-                write!(f, "E{},{},{},{},{},{},{},{}", players, score_1, player_2_name, score_2,
-                player_3_name, score_3, player_4_name, score_4),
-                */
             _ => write!(f, "ERROR WHILE FORMATTING PACKET!")
         }
     }
