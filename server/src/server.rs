@@ -115,7 +115,7 @@ impl Server {
                         sender.send(Some(Package::StartGame{ player_id: player_id.to_string() })).unwrap()
                     },
                     Package::CheckStatus { player_id } => {
-                        let result = package_handlers::handle_check_status_package(&kahoot, player_id.clone());
+                        let result = package_handlers::handle_check_status_package(&mut kahoot, player_id.clone());
                         match result {
                             CheckStatusRet::Question { question, options } => {
                                 sender.send(Some(Package::Question{ question, options }))

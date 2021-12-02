@@ -12,7 +12,7 @@ pub struct Kahoot {
 }
 
 impl Kahoot {
-    const REQUIRED_PLAYERS : u8 = 2;
+    pub const REQUIRED_PLAYERS : u8 = 2;
 
     pub fn new(questions: Vec<Question>) -> Kahoot {
         Kahoot {
@@ -74,6 +74,12 @@ impl Kahoot {
         } else {
             Some(self.questions.get(self.current_question as usize).unwrap())
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.current_question = 0;
+        self.players.clear();
+        self.players_who_answered.clear();
     }
 }
 

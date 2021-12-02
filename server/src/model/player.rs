@@ -19,6 +19,7 @@ impl Clone for Player{
         }
     }
 }
+
 impl Player {
     pub fn new(name: String) -> Player {
         NEXT_ID.with(|next_id| {
