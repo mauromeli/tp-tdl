@@ -77,16 +77,12 @@ impl Client {
                     stream.write(&bytes);
                 }
                 Package::EndGame {
-                    player_1_name, score_1,
-                    player_2_name, score_2,
-                    player_3_name, score_3,
-                    player_4_name, score_4
+                    players
                 } => {
                     println!("Puntajes:");
-                    println!("{}: {} puntos", player_1_name, score_1);
-                    println!("{}: {} puntos", player_2_name, score_2);
-                    println!("{}: {} puntos", player_3_name, score_3);
-                    println!("{}: {} puntos", player_4_name, score_4);
+                    for (key, value) in players{
+                        println!("{}: {} puntos", key, value);
+                    }
                     break;
                 }
                 Package::Wait { player_id: _ } => {
