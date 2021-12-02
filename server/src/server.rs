@@ -62,7 +62,8 @@ impl Server {
                 let channel = in_sender.clone();
                 // let question_cloned = questions.clone();
                 let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-                    Server::client_handler(client_stream, channel)?;
+                    let mut client = Client::new(client_stream, addr);
+                    Server::client_handler(client, channel)?;
                     Ok(())
                 });
             }
@@ -72,21 +73,29 @@ impl Server {
         });
     }
 
-    fn client_handler(client: TcpStream, sender: Sender<(Package, Sender<Option<Package>>)>) -> io::Result<()> {
-        let mut client = Client::new(client);
+    fn client_handler(mut client: Client, sender: Sender<(Package, Sender<Option<Package>>)>) -> io::Result<()> {
         let (ret_sender, ret_recv): (Sender<Option<Package>>, Receiver<Option<Package>>) = mpsc::channel();
 
         loop {
             let recv_package = client.recv();
+            match recv_package {
+                Ok(recv_package) => {
+                    sender.send((recv_package, ret_sender.clone()));
 
-            sender.send((recv_package, ret_sender.clone()));
-
-            let package = ret_recv.recv().unwrap();
-            match package {
-                Some(package) => { client.send(format!("{}", package)); }
-                None => {}
+                    let package = ret_recv.recv().unwrap();
+                    match package {
+                        Some(package) => { client.send(format!("{}", package)); }
+                        None => {}
+                    }
+                }
+                Err(e) => {
+                    println!("[INFO] - Client {}:{} has disconnected", client.addr.ip(), client.addr.port());
+                    break;
+                }
             }
         }
+
+        Ok(())
     }
 
     // Probably we can configure this with the answers
