@@ -1,9 +1,14 @@
 [
-  {"question": "¿Quién gano la libertadores 2018?",
-  "options":  ["Real Madrid", "Barcelona", "Boca", "River"],
-  "answer":"River"},
+  {"question": "En RUST, ¿Qué se puede decir sobre el uso de _ entre números?",
+  "options":   ["Sirve como separador decimal", "No hay que usarlo", "No existe en Rust", "Hace legible el código"],
+  "answer":"Hace legible el código"},
 
-  {"question": "¿Cómo se dice 'cocinero' en inglés?",
-  "options":   ["Cooker", "Cook", "Cooking", "Cooked"],
-  "answer":"Cooker"}
+  {"question": "En RUST, ¿Cuál es el tamaño de un union con un miembro u8 y otro u16?",
+  "options":  ["32 bits", "16 bits", "24 bytes", "Depende del sistema operativo"],
+  "answer":"32 bits"},
+
+  {"question": "En RUST, ¿Cómo se pasan los parámetros por defecto?",
+  "options":   ["Por valor", "Por referencia", "Por movimiento", "Por copia"],
+  "answer":"Por movimiento"},
+
 ]
