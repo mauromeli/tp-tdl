@@ -1,4 +1,4 @@
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::io;
 use std::io::Read;
 use std::thread;
@@ -11,13 +11,15 @@ use crate::file_reader::reader;
 use crate::packages::Package;
 use crate::model::kahoot::Kahoot;
 use crate::package_handlers::package_handlers;
-use crate::model::question::Question;
 use crate::package_handlers::package_handlers::CheckStatusRet;
 
 const EXIT_KEY: char = 'q';
 
-type ChannelSender = Sender<(String, Sender<String>)>;
-type ChannelRecv = Receiver<(String, Sender<String>)>;
+type OutChannelSend = Sender<Option<Package>>;
+type OutChannelRecv = Receiver<Option<Package>>;
+
+type InChannelSend = Sender<(Package, OutChannelSend)>;
+type InChannelRecv = Receiver<(Package, OutChannelSend)>;
 
 pub struct Server {
     // pub kahoot_game: Kahoot
@@ -50,7 +52,7 @@ impl Server {
             let listener = TcpListener::bind(addr).unwrap();
             println!("[INFO] - Listening on port {}", port_copy);
 
-            let (in_sender, in_recv): (Sender<(Package, Sender<Option<Package>>)>, Receiver<(Package, Sender<Option<Package>>)>) = mpsc::channel();
+            let (in_sender, in_recv): (InChannelSend, InChannelRecv) = mpsc::channel();
             self.spawn_evaluator_thread(in_recv);
 
             while let Ok(connection) = listener.accept() {
@@ -62,7 +64,7 @@ impl Server {
                 let channel = in_sender.clone();
                 // let question_cloned = questions.clone();
                 let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
-                    let mut client = Client::new(client_stream, addr);
+                    let client = Client::new(client_stream, addr);
                     Server::client_handler(client, channel)?;
                     Ok(())
                 });
@@ -74,13 +76,13 @@ impl Server {
     }
 
     fn client_handler(mut client: Client, sender: Sender<(Package, Sender<Option<Package>>)>) -> io::Result<()> {
-        let (ret_sender, ret_recv): (Sender<Option<Package>>, Receiver<Option<Package>>) = mpsc::channel();
+        let (ret_sender, ret_recv): (OutChannelSend, OutChannelRecv) = mpsc::channel();
 
         loop {
             let recv_package = client.recv();
             match recv_package {
                 Ok(recv_package) => {
-                    sender.send((recv_package, ret_sender.clone()));
+                    sender.send((recv_package, ret_sender.clone())).unwrap();
 
                     let package = ret_recv.recv().unwrap();
                     match package {
@@ -88,7 +90,7 @@ impl Server {
                         None => {}
                     }
                 }
-                Err(e) => {
+                Err(..) => {
                     println!("[INFO] - Client {}:{} has disconnected", client.addr.ip(), client.addr.port());
                     break;
                 }
@@ -99,16 +101,18 @@ impl Server {
     }
 
     // Probably we can configure this with the answers
-    fn spawn_evaluator_thread(mut self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
+    fn spawn_evaluator_thread(self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let questions = reader();
             let mut kahoot = Kahoot::new(questions);
+
+            #[allow(irrefutable_let_patterns)]
             while let (package, sender) = receiver.recv().unwrap() {
                 match package {
                     Package::Connect { player_name } => {
                         println!("[INFO] - Se conectó {}", player_name);
                         let player_id = package_handlers::handle_connect_package(&mut kahoot, player_name);
-                        sender.send(Some(Package::StartGame{ player_id: player_id.to_string() }));
+                        sender.send(Some(Package::StartGame{ player_id: player_id.to_string() })).unwrap()
                     },
                     Package::CheckStatus { player_id } => {
                         let result = package_handlers::handle_check_status_package(&kahoot, player_id.clone());
@@ -130,16 +134,16 @@ impl Server {
                             CheckStatusRet::Wait {} => {
                                 sender.send(Some(Package::Wait{ player_id }))
                             }
-                        };
+                        }.unwrap()
                     },
                     Package::Response { player_id, response } => {
-                        println!("Respuesta: {}, player_id: {}", response, player_id);
                         package_handlers::handle_response_package(&mut kahoot, player_id.clone(), response);
-                        sender.send(None);
+                        sender.send(None).unwrap()
                     }
                     _ => {}
                 }
             }
+
             Ok(())
         });
     }

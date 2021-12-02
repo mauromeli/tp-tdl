@@ -10,14 +10,6 @@ impl Question {
     const POINTS_IF_CORRECT : u32 = 5;
     const POINTS_IF_INCORRECT : u32 = 0;
 
-    pub fn new(question: String, options: Vec<String>, answer: String) -> Question {
-        return Question {
-            question,
-            options,
-            answer
-        }
-    }
-
     fn uniform_option(&self, option: String) -> String {
         if option.len() == 1 {
             // It's a char, 65 is A in ASCII

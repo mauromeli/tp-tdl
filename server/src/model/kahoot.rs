@@ -39,20 +39,6 @@ impl Kahoot {
         self.current_question == self.questions.len() as u8
     }
 
-    // TODO: Remove
-    pub fn get_winner(&mut self) -> (u8, u32) {
-        //In case of draw, the first player who had been added to the list wins.
-        let mut id_winner :u8 = 0;
-        let mut points_winner :u32 = 0;
-        for (id, player) in self.players.iter() {
-            if player.points > points_winner {
-                id_winner = id.clone();
-                points_winner = player.points.clone();
-            }
-        }
-        (id_winner, points_winner)
-    }
-
     pub fn answer_current_question(&mut self, player_id: u8, option: String) {
         if self.player_answered_current_question(player_id.clone()) || self.should_end() {
             // Players should not answer twice
