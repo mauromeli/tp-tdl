@@ -76,6 +76,9 @@ impl Client {
                         buffer.as_bytes(),
                     ].concat();
                     stream.write(&bytes);
+
+                    let one_second = time::Duration::from_secs(1);
+                    thread::sleep(one_second);
                 }
                 Package::EndGame {
                     player_1_name, score_1,
