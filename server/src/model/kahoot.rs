@@ -54,8 +54,9 @@ impl Kahoot {
     }
 
     pub fn answer_current_question(&mut self, player_id: u8, option: String) {
-        if self.player_answered_current_question(player_id.clone()) {
+        if self.player_answered_current_question(player_id.clone()) || self.should_end() {
             // Players should not answer twice
+            // If game ends players can't answer
             return
         }
 

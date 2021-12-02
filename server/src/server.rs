@@ -49,7 +49,7 @@ impl Server {
             let listener = TcpListener::bind(addr).unwrap();
             println!("[INFO] - Listening on port {}", port_copy);
 
-            let (in_sender, in_recv): (Sender<(Package, Sender<Package>)>, Receiver<(Package, Sender<Package>)>) = mpsc::channel();
+            let (in_sender, in_recv): (Sender<(Package, Sender<Option<Package>>)>, Receiver<(Package, Sender<Option<Package>>)>) = mpsc::channel();
             self.spawn_evaluator_thread(in_recv);
 
             while let Ok(connection) = listener.accept() {
@@ -71,9 +71,9 @@ impl Server {
         });
     }
 
-    fn client_handler(client: TcpStream, sender: Sender<(Package, Sender<Package>)>) -> io::Result<()> {
+    fn client_handler(client: TcpStream, sender: Sender<(Package, Sender<Option<Package>>)>) -> io::Result<()> {
         let mut client = Client::new(client);
-        let (ret_sender, ret_recv): (Sender<Package>, Receiver<Package>) = mpsc::channel();
+        let (ret_sender, ret_recv): (Sender<Option<Package>>, Receiver<Option<Package>>) = mpsc::channel();
 
         loop {
             let recv_package = client.recv();
@@ -81,13 +81,15 @@ impl Server {
             sender.send((recv_package, ret_sender.clone()));
 
             let package = ret_recv.recv().unwrap();
-            client.send(format!("{}", package));
+            match package {
+                Some(package) => { client.send(format!("{}", package)); }
+                None => {}
+            }
         }
-        Ok(())
     }
 
     // Probably we can configure this with the answers
-    fn spawn_evaluator_thread(mut self, receiver: Receiver<(Package, Sender<Package>)>) {
+    fn spawn_evaluator_thread(mut self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             // TODO: Read questions from file
             let options = vec!["1952".to_string(), "1955".to_string(),
@@ -102,35 +104,34 @@ impl Server {
                     Package::Connect { player_name } => {
                         println!("[INFO] - Se conectó {}", player_name);
                         let player_id = package_handlers::handle_connect_package(&mut kahoot, player_name);
-                        sender.send(Package::StartGame{ player_id: player_id.to_string() });
+                        sender.send(Some(Package::StartGame{ player_id: player_id.to_string() }));
                     },
                     Package::CheckStatus { player_id } => {
                         let result = package_handlers::handle_check_status_package(&kahoot, player_id.clone());
                         match result {
                             CheckStatusRet::Question { question, options } => {
-                                sender.send(Package::Question{ question, options })
+                                sender.send(Some(Package::Question{ question, options }))
                             },
                             CheckStatusRet::End { players } => {
                                 // TODO: Correct this
                                 let players_names : Vec<String> = players.keys().cloned().collect();
                                 let players_points : Vec<String> = players.values().cloned().collect();
-                                println!("Players: {:?}", players_names);
-                                sender.send(Package::EndGame{
+                                sender.send(Some(Package::EndGame{
                                     player_1_name: players_names[0].clone(), score_1: players_points[0].clone(),
                                     player_2_name: "Empty".to_string(), score_2: "0".to_string(),
                                     player_3_name: "Empty".to_string(), score_3: "0".to_string(),
                                     player_4_name: "Empty".to_string(), score_4: "0".to_string()
-                                })
+                                }))
                             },
                             CheckStatusRet::Wait {} => {
-                                sender.send(Package::Wait{ player_id })
+                                sender.send(Some(Package::Wait{ player_id }))
                             }
                         };
                     },
                     Package::Response { player_id, response } => {
                         println!("Respuesta: {}, player_id: {}", response, player_id);
                         package_handlers::handle_response_package(&mut kahoot, player_id.clone(), response);
-                        sender.send(Package::Wait{ player_id });
+                        sender.send(None);
                     }
                     _ => {}
                 }
