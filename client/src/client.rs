@@ -68,6 +68,7 @@ impl Client {
                     let mut buffer = String::new();
                     io::stdin().read_line(&mut buffer).unwrap();
                     buffer.pop(); // Remove newline
+                    println!();
 
                     let bytes = [
                         "R".to_string().as_bytes(),
