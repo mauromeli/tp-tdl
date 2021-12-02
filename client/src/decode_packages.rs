@@ -1,14 +1,6 @@
 use crate::packages::Package;
-use std::collections::HashMap;
-use std::io::Read;
-use std::str;
-
 
 pub fn decode_package(bytes: &[u8]) -> Result<Package, String> {
-    let s = match str::from_utf8(bytes) {
-        Ok(v) => println!("Bytes: {}", v),
-        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-    };
     match bytes[0] as char {
         'A' => {
             let player_id = std::str::from_utf8(&bytes[1..]).unwrap().to_string();

@@ -1,11 +1,12 @@
 use std::io::{Read, Write};
-use std::net::TcpStream;
+use std::net::{SocketAddr, TcpStream};
 use std::str;
 use crate::model::question::Question;
 use crate::packages::Package;
 
 pub struct Client{
-    stream: TcpStream
+    stream: TcpStream,
+    pub addr: SocketAddr
 }
 
 pub trait Runnable{
@@ -13,16 +14,21 @@ pub trait Runnable{
 }
 
 impl Client {
-    pub fn new(stream: TcpStream) -> Client{
+    pub fn new(stream: TcpStream, addr: SocketAddr) -> Client{
         Client {
-            stream
+            stream,
+            addr
         }
     }
 
-    pub fn recv(&mut self) -> Package {
+    pub fn recv(&mut self) -> Result<Package, &'static str> {
         let mut buffer = [0; 1024];
         let bytes_read = self.stream.read(&mut buffer).unwrap();
-        decode_package(&buffer[0..bytes_read]).unwrap()
+        if bytes_read == 0 {
+            Err("Connection closed")
+        } else {
+            Ok(decode_package(&buffer[0..bytes_read]).unwrap())
+        }
     }
 
     pub fn send(&mut self, str: String) {

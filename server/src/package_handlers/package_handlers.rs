@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use crate::model::kahoot::Kahoot;
 use crate::model::player::Player;
-use crate::model::question::Question;
-use std::option;
 
 #[derive(Debug)]
 pub enum CheckStatusRet {

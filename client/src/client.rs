@@ -24,14 +24,14 @@ impl Client {
             player_name.as_bytes(),
         ].concat();
 
-        stream.write(&bytes);
+        stream.write(&bytes).unwrap();
 
         let mut recv_buffer = [0; 1024];
         let mut bytes_received = stream.read(&mut recv_buffer).unwrap();
         //let response = from_utf8(&mut recv_buffer[0..bytes_received]).unwrap();
 
         let ack_package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
-        let mut player: String;
+        let player: String;
 
         match ack_package {
             Package::ACKConnect { player_id } => {
@@ -50,7 +50,7 @@ impl Client {
                 player.clone().as_bytes(),
             ].concat();
 
-            stream.write(&bytes);
+            stream.write(&bytes).unwrap();
 
             let mut recv_buffer = [0; 1024];
             bytes_received = stream.read(&mut recv_buffer).unwrap();
@@ -68,13 +68,17 @@ impl Client {
                     let mut buffer = String::new();
                     io::stdin().read_line(&mut buffer).unwrap();
                     buffer.pop(); // Remove newline
+                    println!();
 
                     let bytes = [
                         "R".to_string().as_bytes(),
                         player.clone().as_bytes(),
                         buffer.as_bytes(),
                     ].concat();
-                    stream.write(&bytes);
+                    stream.write(&bytes).unwrap();
+
+                    let one_second = time::Duration::from_secs(1);
+                    thread::sleep(one_second);
                 }
                 Package::EndGame {
                     players
