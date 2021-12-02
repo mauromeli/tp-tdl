@@ -28,18 +28,17 @@ impl Client {
 
         let mut recv_buffer = [0; 1024];
         let mut bytes_received = stream.read(&mut recv_buffer).unwrap();
-        //let response = from_utf8(&mut recv_buffer[0..bytes_received]).unwrap();
 
         let ack_package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
         let player: String;
 
         match ack_package {
             Package::ACKConnect { player_id } => {
-                println!("Esperando Preguntas... Soy {} \n", player_id);
+                println!("Esperando más jugadores...");
                 player = player_id;
             }
             _ => {
-                println!("couldn't connect");
+                println!("No me pude conectar");
                 return;
             }
         }
@@ -59,16 +58,15 @@ impl Client {
 
             match package {
                 Package::Question { question, options } => {
-                    println!("Pregunta: {}", question);
-                    println!("Opcion A: {}", options[0]);
-                    println!("Opcion B: {}", options[1]);
-                    println!("Opcion C: {}", options[2]);
-                    println!("Opcion D: {}", options[3]);
+                    println!("\nPregunta: {}", question);
+                    println!("A) {}", options[0]);
+                    println!("B) {}", options[1]);
+                    println!("C) {}", options[2]);
+                    println!("D) {}", options[3]);
 
                     let mut buffer = String::new();
                     io::stdin().read_line(&mut buffer).unwrap();
                     buffer.pop(); // Remove newline
-                    println!();
 
                     let bytes = [
                         "R".to_string().as_bytes(),
@@ -83,8 +81,11 @@ impl Client {
                 Package::EndGame {
                     players
                 } => {
-                    println!("Puntajes:");
-                    for (key, value) in players{
+                    let mut sorted_players: Vec<_> = players.iter().collect();
+                    sorted_players.sort_by_key(|a| a.0);
+
+                    println!("\nTabla de puntajes:");
+                    for (key, value) in sorted_players.iter() {
                         println!("{}: {} puntos", key, value);
                     }
                     break;
@@ -99,20 +100,20 @@ impl Client {
     }
 
     fn name_consultor(&self) -> String {
-        println!("Bienvenido a Kaho-rust!, ¿Cuál es tu nombre?");
+        println!("Bienvenido a Kaho-rust! ¿Cuál es tu nombre?");
 
         let mut buffer = String::new();
         stdin().read_line(&mut buffer).unwrap(); // <- API requires buffer param as of Rust 1.0; returns `Result` of bytes read
         let res = match buffer.trim_end() {
             "" => {
                 let name = self.name_generator();
-                println!("Oh!, veo que queres mantenerte anonimo. Te llamaremos {}", name);
+                println!("Oh! veo que sos de pocas palabras. Te llamaremos {}", name);
                 name
             }
             name => name.to_string(),
         };
 
-        println!("Hola {}. Mucha suerte :) !!", res);
+        println!("Hola {}. Mucha suerte :)", res);
         res
     }
 

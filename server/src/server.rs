@@ -121,17 +121,14 @@ impl Server {
                                 sender.send(Some(Package::Question{ question, options }))
                             },
                             CheckStatusRet::End { mut players } => {
-                                // TODO: Correct this
                                 let players_names : Vec<String> = players.keys().cloned().collect();
                                 let players_points : Vec<String> = players.values().cloned().collect();
-                                println!("Players: {:?}", players_names);
 
                                 for i in 0..players_names.len(){
                                     players.insert(players_names[i].clone(), players_points[i].clone());
                                 }
-                                sender.send(Some(Package::EndGame{
-                                    players
-                                }))
+
+                                sender.send(Some(Package::EndGame{ players }))
                             },
                             CheckStatusRet::Wait {} => {
                                 sender.send(Some(Package::Wait{ player_id }))
