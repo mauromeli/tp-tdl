@@ -1,14 +1,21 @@
 [
   {"question": "En RUST, ¿Qué se puede decir sobre el uso de _ entre números?",
-  "options":   ["Sirve como separador decimal", "No hay que usarlo", "No existe en Rust", "Hace legible el código"],
-  "answer":"Hace legible el código"},
+  "options": ["Sirve como separador decimal", "No hay que usarlo", "No existe en Rust", "Hace legible el código"],
+  "answer": "Hace legible el código"},
 
   {"question": "En RUST, ¿Cuál es el tamaño de un union con un miembro u8 y otro u16?",
-  "options":  ["32 bits", "16 bits", "24 bytes", "Depende del sistema operativo"],
-  "answer":"32 bits"},
+  "options": ["32 bits", "16 bits", "24 bytes", "Depende del sistema operativo"],
+  "answer": "32 bits"},
 
   {"question": "En RUST, ¿Cómo se pasan los parámetros por defecto?",
-  "options":   ["Por valor", "Por referencia", "Por movimiento", "Por copia"],
-  "answer":"Por movimiento"},
+  "options": ["Por valor", "Por referencia", "Por movimiento", "Por copia"],
+  "answer": "Por movimiento"},
 
+  {"question": "¿Cómo se llaman los fans de RUST?",
+    "options": ["Rusticos", "Rustaceos", "Rusters", "Juan, Pedro depende de como le hayan puesto los padres..."],
+    "answer": "Rustaceos"},
+
+  {"question": "¿Cuales de los siguientes NO es un tipo de dato en RUST?",
+    "options": ["u32", "String", "str", "void*"],
+    "answer": "void*"}
 ]
