@@ -4,8 +4,9 @@ use std::io::Read;
 use std::thread;
 use std::thread::JoinHandle;
 use std::sync::mpsc::{Receiver, Sender};
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc};
 use std::str;
+use std::sync::atomic::{AtomicBool, Ordering};
 use crate::client::Client;
 use crate::file_reader::reader;
 use crate::packages::Package;
@@ -20,6 +21,8 @@ type OutChannelRecv = Receiver<Option<Package>>;
 
 type InChannelSend = Sender<(Package, OutChannelSend)>;
 type InChannelRecv = Receiver<(Package, OutChannelSend)>;
+/// Tipo de dato definido para guardar las conecciones de los usuarios y su estado en uso.
+type VecHandler = Vec<(JoinHandle<Result<(), io::Error>>, Arc<AtomicBool>)>;
 
 pub struct Server {
     // pub kahoot_game: Kahoot
@@ -55,6 +58,7 @@ impl Server {
             let (in_sender, in_recv): (InChannelSend, InChannelRecv) = mpsc::channel();
             self.spawn_evaluator_thread(in_recv);
 
+            let mut handlers: VecHandler = vec![];
             while let Ok(connection) = listener.accept() {
                 // Now we can have an array of clients
                 let (client_stream, addr) = connection;
@@ -62,12 +66,39 @@ impl Server {
 
                 // We should create some shared structure, maybe could be a mutex or a channels solution
                 let channel = in_sender.clone();
-                // let question_cloned = questions.clone();
-                let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
+
+
+                let flag = Arc::new(AtomicBool::new(true));
+                let used_flag = flag.clone();
+
+                let handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
                     let client = Client::new(client_stream, addr);
-                    Server::client_handler(client, channel)?;
+                    Server::client_handler(client, channel, &used_flag)?;
                     Ok(())
                 });
+
+                // Check if we have handlers innactives
+                handlers.push((handler, flag));
+
+                let mut handlers_actives: VecHandler = vec![];
+                let mut handlers_inactives: VecHandler = vec![];
+                for (handler, used) in handlers {
+                    if used.load(Ordering::Relaxed) {
+                        handlers_actives.push((handler, used));
+                    } else {
+                        handlers_inactives.push((handler, used));
+                    }
+                }
+
+
+                // Join inactives handlers
+                for (handler, _) in handlers_inactives {
+                    if handler.join().is_err() {
+                        println!("Error joining handler")
+                    }
+                }
+
+                handlers = handlers_actives;
             }
 
             drop(listener);
@@ -75,7 +106,7 @@ impl Server {
         });
     }
 
-    fn client_handler(mut client: Client, sender: Sender<(Package, Sender<Option<Package>>)>) -> io::Result<()> {
+    fn client_handler(mut client: Client, sender: Sender<(Package, Sender<Option<Package>>)>, used: &AtomicBool) -> io::Result<()> {
         let (ret_sender, ret_recv): (OutChannelSend, OutChannelRecv) = mpsc::channel();
 
         loop {
@@ -97,6 +128,8 @@ impl Server {
             }
         }
 
+
+        used.swap(false, Ordering::Relaxed);
         Ok(())
     }
 
@@ -112,29 +145,29 @@ impl Server {
                     Package::Connect { player_name } => {
                         println!("[INFO] - Se conectó {}", player_name);
                         let player_id = package_handlers::handle_connect_package(&mut kahoot, player_name);
-                        sender.send(Some(Package::StartGame{ player_id: player_id.to_string() })).unwrap()
-                    },
+                        sender.send(Some(Package::StartGame { player_id: player_id.to_string() })).unwrap()
+                    }
                     Package::CheckStatus { player_id } => {
                         let result = package_handlers::handle_check_status_package(&mut kahoot, player_id.clone());
                         match result {
                             CheckStatusRet::Question { question, options } => {
-                                sender.send(Some(Package::Question{ question, options }))
-                            },
+                                sender.send(Some(Package::Question { question, options }))
+                            }
                             CheckStatusRet::End { mut players } => {
-                                let players_names : Vec<String> = players.keys().cloned().collect();
-                                let players_points : Vec<String> = players.values().cloned().collect();
+                                let players_names: Vec<String> = players.keys().cloned().collect();
+                                let players_points: Vec<String> = players.values().cloned().collect();
 
-                                for i in 0..players_names.len(){
+                                for i in 0..players_names.len() {
                                     players.insert(players_names[i].clone(), players_points[i].clone());
                                 }
 
-                                sender.send(Some(Package::EndGame{ players }))
-                            },
+                                sender.send(Some(Package::EndGame { players }))
+                            }
                             CheckStatusRet::Wait {} => {
-                                sender.send(Some(Package::Wait{ player_id }))
+                                sender.send(Some(Package::Wait { player_id }))
                             }
                         }.unwrap()
-                    },
+                    }
                     Package::Response { player_id, response } => {
                         package_handlers::handle_response_package(&mut kahoot, player_id.clone(), response);
                         sender.send(None).unwrap()
