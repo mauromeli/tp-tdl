@@ -12,6 +12,9 @@ const HOST: &str = "localhost";
 const PORT: &str = "3004";
 
 fn main() {
+    //Instancio el servidor
     let server = Server::new();
+
+    //Pongo a correr el servidor en HOST; PORT
     server.run(HOST, PORT);
 }

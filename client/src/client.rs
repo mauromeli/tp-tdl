@@ -17,6 +17,8 @@ impl Client {
         let player_name = self.name_consultor();
 
         let addr = &format!("{}:{}", host, port);
+
+        //Conexion TCP a un Host remoto
         let mut stream = TcpStream::connect(addr).unwrap();
 
         let bytes = [
@@ -24,12 +26,18 @@ impl Client {
             player_name.as_bytes(),
         ].concat();
 
+        //Coloco en el stream los datos a enviar
         stream.write(&bytes).unwrap();
 
+        //Nuevo buffer inicializado con 0
         let mut recv_buffer = [0; 1024];
-        let mut bytes_received = stream.read(&mut recv_buffer).unwrap();
 
-        let ack_package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
+        //Recibo datos del stream correspondiente
+        let mut bytes_amount_received = stream.read(&mut recv_buffer).unwrap();
+
+        let package_to_decode = &recv_buffer[0..bytes_amount_received];
+
+        let ack_package = decode_package(package_to_decode).unwrap();
         let player: String;
 
         match ack_package {
@@ -49,12 +57,19 @@ impl Client {
                 player.clone().as_bytes(),
             ].concat();
 
+            //Coloco en el stream los datos a enviar
             stream.write(&bytes).unwrap();
 
-            let mut recv_buffer = [0; 1024];
-            bytes_received = stream.read(&mut recv_buffer).unwrap();
 
-            let package = decode_package(&mut recv_buffer[0..bytes_received]).unwrap();
+            //Nuevo buffer inicializado con 0
+            let mut recv_buffer = [0; 1024];
+
+            //Recibo datos del stream correspondiente
+            bytes_amount_received = stream.read(&mut recv_buffer).unwrap();
+
+            let package_to_decode = &recv_buffer[0..bytes_amount_received];
+
+            let package = decode_package(package_to_decode).unwrap();
 
             match package {
                 Package::Question { question, options } => {
@@ -73,6 +88,8 @@ impl Client {
                         player.clone().as_bytes(),
                         buffer.as_bytes(),
                     ].concat();
+
+                    //Coloco en el stream los datos a enviar
                     stream.write(&bytes).unwrap();
 
                     let one_second = time::Duration::from_secs(1);

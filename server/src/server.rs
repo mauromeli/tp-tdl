@@ -34,6 +34,7 @@ impl Server {
     }
 
     pub fn run(self, host: &str, port: &str) {
+        //Método encargado de spawnear un listener thread por cada cliente
         self.spawn_listener_thread(host, port);
 
         for byte in io::stdin().bytes() {
@@ -48,6 +49,7 @@ impl Server {
         let host_copy = host.to_string();
         let port_copy = port.to_string();
 
+        //Hago uso de thread::spawn
         let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let addr = &format!("{}:{}", host_copy, port_copy);
             let listener = TcpListener::bind(addr).unwrap();

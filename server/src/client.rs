@@ -1,16 +1,11 @@
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
 use std::str;
-use crate::model::question::Question;
 use crate::packages::Package;
 
 pub struct Client{
     stream: TcpStream,
     pub addr: SocketAddr
-}
-
-pub trait Runnable{
-    fn run(client: &mut Client, questions: Vec<Question>);
 }
 
 impl Client {
@@ -36,14 +31,6 @@ impl Client {
     }
 }
 
-impl Runnable for Client{
-    fn run(client: &mut Client, questions: Vec<Question>) {
-        let mut buffer = [0; 1024];
-        client.stream.read(&mut buffer).unwrap();
-        let owned_string: String = questions[0].question.to_owned();
-        client.stream.write(owned_string.as_bytes()).unwrap();
-    }
-}
 
 fn decode_package(bytes: &[u8]) -> Result<Package, String> {
     match bytes[0] as char {
@@ -60,7 +47,7 @@ fn decode_package(bytes: &[u8]) -> Result<Package, String> {
             let response = str::from_utf8(&bytes[2..]).unwrap().to_string();
             Ok(Package::Response{ player_id, response })
         },
-        'W' => { //Check status, si se saca el StartGame le cambiamos la letra a S
+        'W' => { //Check status
             let player_id = std::str::from_utf8(&bytes[1..]).unwrap().to_string();
             Ok(Package::CheckStatus{ player_id })
         }
