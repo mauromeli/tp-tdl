@@ -21,18 +21,16 @@ type OutChannelRecv = Receiver<Option<Package>>;
 
 type InChannelSend = Sender<(Package, OutChannelSend)>;
 type InChannelRecv = Receiver<(Package, OutChannelSend)>;
-/// Tipo de dato definido para guardar las conecciones de los usuarios y su estado en uso.
+
+// Tipo de dato definido para guardar las conecciones de los usuarios y su estado en uso.
 type VecHandler = Vec<(JoinHandle<Result<(), io::Error>>, Arc<AtomicBool>)>;
 
 pub struct Server {
-    // pub kahoot_game: Kahoot
 }
 
 impl Server {
     pub fn new() -> Server {
-        Server {
-            // kahoot_game: Kahoot::new()
-        }
+        Server {}
     }
 
     pub fn run(self, host: &str, port: &str) {
@@ -60,13 +58,10 @@ impl Server {
 
             let mut handlers: VecHandler = vec![];
             while let Ok(connection) = listener.accept() {
-                // Now we can have an array of clients
                 let (client_stream, addr) = connection;
                 println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
 
-                // We should create some shared structure, maybe could be a mutex or a channels solution
                 let channel = in_sender.clone();
-
 
                 let flag = Arc::new(AtomicBool::new(true));
                 let used_flag = flag.clone();
@@ -133,7 +128,6 @@ impl Server {
         Ok(())
     }
 
-    // Probably we can configure this with the answers
     fn spawn_evaluator_thread(self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let questions = reader();

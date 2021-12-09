@@ -40,10 +40,7 @@ impl Runnable for Client{
     fn run(client: &mut Client, questions: Vec<Question>) {
         let mut buffer = [0; 1024];
         client.stream.read(&mut buffer).unwrap();
-        //let buffer_as_string = str::from_utf8(&buffer[0..bytes_read]).unwrap();
         let owned_string: String = questions[0].question.to_owned();
-        //owned_string.push_str(buffer_as_string);
-        //stream.write(owned_string.to_uppercase().as_bytes()).unwrap();
         client.stream.write(owned_string.as_bytes()).unwrap();
     }
 }
