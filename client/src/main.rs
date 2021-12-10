@@ -8,9 +8,9 @@ const HOST: &str = "localhost";
 const PORT: &str = "3004";
 
 fn main() {
-    //Instancio un cliente
+    //1) Instancio cliente
     let mut client = Client::new();
 
-    //Pongo a correr un cliente para que se conecte
+    //2) Pongo a correr al cliente
     client.run(HOST, PORT);
 }

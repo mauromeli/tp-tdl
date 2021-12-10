@@ -34,7 +34,7 @@ impl Server {
     }
 
     pub fn run(self, host: &str, port: &str) {
-        //Método encargado de spawnear un listener thread por cada cliente
+        //1) Método spawner de listener thread
         self.spawn_listener_thread(host, port);
 
         for byte in io::stdin().bytes() {
@@ -49,7 +49,7 @@ impl Server {
         let host_copy = host.to_string();
         let port_copy = port.to_string();
 
-        //Hago uso de thread::spawn para spawnear un hilo listener
+        //2) Hago uso de thread::spawn para spawnear un hilo listener
         let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let addr = &format!("{}:{}", host_copy, port_copy);
             let listener = TcpListener::bind(addr).unwrap();
@@ -59,9 +59,9 @@ impl Server {
             self.spawn_evaluator_thread(in_recv);
 
             let mut handlers: VecHandler = vec![];
-            //Acepto conexiones mientras se pueda
+            //3) Acepto conexiones mientras se pueda
             while let Ok(connection) = listener.accept() {
-                //Guardo info del cliente
+                //4) Guardo info del cliente
                 let (client_stream, addr) = connection;
                 println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
 
@@ -71,7 +71,7 @@ impl Server {
                 let used_flag = flag.clone();
 
 
-                //Hago uso de thread::spawn para spawnear un hilo cliente
+                //5) Hago uso de thread::spawn para spawnear un hilo cliente
                 let handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
                     let client = Client::new(client_stream, addr);
                     Server::client_handler(client, channel, &used_flag)?;
@@ -135,7 +135,7 @@ impl Server {
     }
 
     fn spawn_evaluator_thread(self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
-        //Lanzo un hilo evaluador
+        //6) Lanzo un hilo evaluador
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let questions = reader();
             let mut kahoot = Kahoot::new(questions);

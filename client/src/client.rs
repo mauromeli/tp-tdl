@@ -18,7 +18,7 @@ impl Client {
 
         let addr = &format!("{}:{}", host, port);
 
-        //Conexion TCP a un Host remoto
+        //1) Conexion TCP a un Host remoto
         let mut stream = TcpStream::connect(addr).unwrap();
 
         let bytes = [
@@ -26,13 +26,13 @@ impl Client {
             player_name.as_bytes(),
         ].concat();
 
-        //Coloco en el stream los datos a enviar
+        //2) Coloco en el stream los datos a enviar
         stream.write(&bytes).unwrap();
 
-        //Nuevo buffer inicializado con 0
+        //3) Nuevo buffer inicializado con 0
         let mut recv_buffer = [0; 1024];
 
-        //Recibo datos del stream correspondiente
+        //4) Recibo datos del stream correspondiente
         let mut bytes_amount_received = stream.read(&mut recv_buffer).unwrap();
 
         let package_to_decode = &recv_buffer[0..bytes_amount_received];
@@ -57,14 +57,14 @@ impl Client {
                 player.clone().as_bytes(),
             ].concat();
 
-            //Coloco en el stream los datos a enviar
+            //5) Coloco en el stream los datos a enviar
             stream.write(&bytes).unwrap();
 
 
-            //Nuevo buffer inicializado con 0
+            //6) Nuevo buffer inicializado con 0
             let mut recv_buffer = [0; 1024];
 
-            //Recibo datos del stream correspondiente
+            //7) Recibo datos del stream correspondiente
             bytes_amount_received = stream.read(&mut recv_buffer).unwrap();
 
             let package_to_decode = &recv_buffer[0..bytes_amount_received];
