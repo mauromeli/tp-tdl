@@ -18,6 +18,7 @@ impl Client {
 
     pub fn recv(&mut self) -> Result<Package, &'static str> {
         let mut buffer = [0; 1024];
+        //Lectura del stream
         let bytes_read = self.stream.read(&mut buffer).unwrap();
         if bytes_read == 0 {
             Err("Connection closed")
@@ -27,6 +28,7 @@ impl Client {
     }
 
     pub fn send(&mut self, str: String) {
+        //Envio total de str
         self.stream.write_all(str.as_bytes()).unwrap();
     }
 }
