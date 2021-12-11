@@ -26,7 +26,7 @@ impl Client {
             player_name.as_bytes(),
         ].concat();
 
-        //2) Coloco en el stream los datos a enviar
+        //2) Coloco en el stream todos los datos a enviar
         stream.write_all(&bytes).unwrap();
 
         //Nuevo buffer inicializado con 0
