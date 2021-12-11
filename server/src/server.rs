@@ -117,8 +117,12 @@ impl Server {
 
                     let package = ret_recv.recv().unwrap();
                     match package {
-                        //Envio un paquete en caso de éxito
-                        Some(package) => { client.send(format!("{}", package)); }
+
+                        Some(package) => {
+                            let packet_to_send = format!("{}", package);
+                            //9) Envio un paquete en caso de éxito
+                            client.send(packet_to_send);
+                        }
                         None => {}
                     }
                 }

@@ -11,6 +11,6 @@ fn main() {
     //1) Instancio cliente
     let client = Client::new();
 
-    //2) Pongo a correr al cliente
+    //2) Pongo a correr al cliente en HOST, PORT
     client.run(HOST, PORT);
 }
