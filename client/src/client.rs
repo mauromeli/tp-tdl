@@ -57,13 +57,11 @@ impl Client {
                 player.clone().as_bytes(),
             ].concat();
 
-            //4)
             stream.write_all(&bytes).unwrap();
 
             //Nuevo buffer inicializado con 0
             let mut recv_buffer = [0; 1024];
 
-            //5)
             bytes_amount_received = stream.read(&mut recv_buffer).unwrap();
 
             let package_to_decode = &recv_buffer[0..bytes_amount_received];
@@ -88,7 +86,6 @@ impl Client {
                         buffer.as_bytes(),
                     ].concat();
 
-                    //6) Coloco en el stream los datos a enviar
                     stream.write_all(&bytes).unwrap();
 
                     let one_second = time::Duration::from_secs(1);
