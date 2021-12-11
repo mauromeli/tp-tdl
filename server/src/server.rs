@@ -49,7 +49,7 @@ impl Server {
         let host_copy = host.to_string();
         let port_copy = port.to_string();
 
-        //2) Hago uso de thread::spawn para spawnear un hilo listener
+        //2) Spawneo un hilo listener
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let addr = &format!("{}:{}", host_copy, port_copy);
             //3) Creo el listener
