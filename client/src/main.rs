@@ -9,7 +9,7 @@ const PORT: &str = "3004";
 
 fn main() {
     //1) Instancio cliente
-    let mut client = Client::new();
+    let client = Client::new();
 
     //2) Pongo a correr al cliente
     client.run(HOST, PORT);

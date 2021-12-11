@@ -13,7 +13,7 @@ impl Client {
         Client {}
     }
 
-    pub fn run(&mut self, host: &str, port: &str) {
+    pub fn run(&self, host: &str, port: &str) {
         let player_name = self.name_consultor();
 
         let addr = &format!("{}:{}", host, port);
