@@ -18,7 +18,7 @@ impl Client {
 
     pub fn recv(&mut self) -> Result<Package, &'static str> {
         let mut buffer = [0; 1024];
-        //1) 
+        //1)
         let bytes_read = self.stream.read(&mut buffer).unwrap();
         if bytes_read == 0 {
             Err("Connection closed")
