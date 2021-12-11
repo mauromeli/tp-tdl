@@ -61,9 +61,8 @@ impl Server {
             self.spawn_evaluator_thread(in_recv);
 
             let mut handlers: VecHandler = vec![];
-            //6) Acepto conexiones mientras se pueda
+            //5) Acepto conexiones mientras se pueda
             while let Ok(connection) = listener.accept() {
-                //7)
                 let (client_stream, addr) = connection;
                 println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
 
@@ -73,7 +72,6 @@ impl Server {
                 let used_flag = flag.clone();
 
 
-                //8)
                 let handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
                     let client = Client::new(client_stream, addr);
                     Server::client_handler(client, channel, &used_flag)?;
@@ -137,7 +135,6 @@ impl Server {
     }
 
     fn spawn_evaluator_thread(self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
-        //5)
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let questions = reader();
             let mut kahoot = Kahoot::new(questions);
