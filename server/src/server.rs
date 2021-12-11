@@ -34,7 +34,7 @@ impl Server {
     }
 
     pub fn run(self, host: &str, port: &str) {
-        //1) Método spawner de listener thread
+        //1)
         self.spawn_listener_thread(host, port);
 
         for byte in io::stdin().bytes() {
@@ -56,12 +56,13 @@ impl Server {
             println!("[INFO] - Listening on port {}", port_copy);
 
             let (in_sender, in_recv): (InChannelSend, InChannelRecv) = mpsc::channel();
+            //3)
             self.spawn_evaluator_thread(in_recv);
 
             let mut handlers: VecHandler = vec![];
-            //3) Acepto conexiones mientras se pueda
+            //5) Acepto conexiones mientras se pueda
             while let Ok(connection) = listener.accept() {
-                //4) Guardo info del cliente
+                //6) Guardo info del cliente
                 let (client_stream, addr) = connection;
                 println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
 
@@ -71,7 +72,7 @@ impl Server {
                 let used_flag = flag.clone();
 
 
-                //5) Hago uso de thread::spawn para spawnear un hilo cliente
+                //7) Hago uso de thread::spawn para spawnear un hilo cliente
                 let handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
                     let client = Client::new(client_stream, addr);
                     Server::client_handler(client, channel, &used_flag)?;
@@ -100,8 +101,6 @@ impl Server {
 
                 handlers = handlers_actives;
             }
-
-            drop(listener);
             Ok(())
         });
     }
@@ -110,7 +109,7 @@ impl Server {
         let (ret_sender, ret_recv): (OutChannelSend, OutChannelRecv) = mpsc::channel();
 
         loop {
-            //Recibo un paquete (o string con error)
+            //8) Recibo un paquete (o string con error)
             let recv_package = client.recv();
             match recv_package {
                 Ok(recv_package) => {
@@ -135,7 +134,7 @@ impl Server {
     }
 
     fn spawn_evaluator_thread(self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
-        //6) Lanzo un hilo evaluador
+        //4) Lanzo un hilo evaluador
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let questions = reader();
             let mut kahoot = Kahoot::new(questions);
