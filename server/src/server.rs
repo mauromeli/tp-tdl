@@ -63,7 +63,7 @@ impl Server {
             let mut handlers: VecHandler = vec![];
             //6) Acepto conexiones mientras se pueda
             while let Ok(connection) = listener.accept() {
-                //7) Guardo info del cliente
+                //7)
                 let (client_stream, addr) = connection;
                 println!("[INFO] - New connection from {}:{}", addr.ip(), addr.port());
 
