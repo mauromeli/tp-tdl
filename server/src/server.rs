@@ -50,7 +50,7 @@ impl Server {
         let port_copy = port.to_string();
 
         //2) Hago uso de thread::spawn para spawnear un hilo listener
-        let _handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
+        let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let addr = &format!("{}:{}", host_copy, port_copy);
             let listener = TcpListener::bind(addr).unwrap();
             println!("[INFO] - Listening on port {}", port_copy);
