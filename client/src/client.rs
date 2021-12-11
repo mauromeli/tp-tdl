@@ -27,7 +27,7 @@ impl Client {
         ].concat();
 
         //2) Coloco en el stream los datos a enviar
-        stream.write(&bytes).unwrap();
+        stream.write_all(&bytes).unwrap();
 
         //Nuevo buffer inicializado con 0
         let mut recv_buffer = [0; 1024];
