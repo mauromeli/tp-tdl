@@ -28,9 +28,9 @@ impl Client {
     }
 
     pub fn send(&mut self, str: String) {
-        bytes_to_send = str.as_bytes();
+        let bytes_to_send = str.as_bytes();
         //2) Envio total de str
-        self.stream.write_all().unwrap();
+        self.stream.write_all(bytes_to_send).unwrap();
     }
 }
 
