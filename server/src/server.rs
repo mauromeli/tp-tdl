@@ -73,7 +73,7 @@ impl Server {
                 let used_flag = flag.clone();
 
 
-                //8) Hago uso de thread::spawn para spawnear un hilo cliente
+                //8)
                 let handler: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
                     let client = Client::new(client_stream, addr);
                     Server::client_handler(client, channel, &used_flag)?;
@@ -110,7 +110,6 @@ impl Server {
         let (ret_sender, ret_recv): (OutChannelSend, OutChannelRecv) = mpsc::channel();
 
         loop {
-            //9) Recibo un paquete (o string con error)
             let recv_package = client.recv();
             match recv_package {
                 Ok(recv_package) => {
@@ -121,7 +120,6 @@ impl Server {
 
                         Some(package) => {
                             let packet_to_send = format!("{}", package);
-                            //10) Envio un paquete en caso de éxito
                             client.send(packet_to_send);
                         }
                         None => {}
@@ -139,7 +137,7 @@ impl Server {
     }
 
     fn spawn_evaluator_thread(self, receiver: Receiver<(Package, Sender<Option<Package>>)>) {
-        //5) Lanzo un hilo evaluador
+        //5)
         let _: JoinHandle<Result<(), io::Error>> = thread::spawn(move || {
             let questions = reader();
             let mut kahoot = Kahoot::new(questions);
